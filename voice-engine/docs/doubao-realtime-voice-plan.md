@@ -11,21 +11,22 @@
 
 ## 1. 结论
 
-Voice Engine 的基础能力建议采用“双层方案”：
+Voice Engine 的基础能力建议分三步做，而不是一开始就做完整业务路由：
 
 ```text
 H5 / Android WebView
   -> Android Native Shell / Web RTC Client
-  -> 火山 RTC / 豆包实时语音能力
-  -> CustomLLM / Agent Gateway
-  -> Semantic Router
-  -> Scenario Skill
+  -> 豆包 S2S 实时语音
+  -> VAD / 打断
+  -> Voice Gateway / Semantic Router
+  -> Scenario Skill / Native Action
 ```
 
 其中：
 
-- 实时语音、VAD、打断、降噪、ASR/TTS 或 S2S 体验尽量复用火山/豆包官方能力。
-- 意图识别、业务路由、确认、安全边界、场景插件由 ECHORURA 自己的 Voice Gateway 控制。
+- 第一阶段先做 S2S 可对话入口，只验证“用户能说，系统能实时语音回答”。
+- 第二阶段做 VAD / 打断，只验证“用户能插话，系统能停播或取消当前 turn”。
+- 第三阶段再做意图识别、业务路由、确认、安全边界和场景插件。
 - 音乐创作只是第一个 `music_creation` 场景，Voice Engine 本身保持通用。
 
 ## 2. 为什么不直接把 S2S 当全部大脑
@@ -46,33 +47,41 @@ H5 / Android WebView
 
 ## 3. 推荐主路径
 
-### 3.1 第一阶段：RTC 对话式 AI + CustomLLM
+### 3.1 第一阶段：S2S 可对话语音入口
 
-优先参考火山 RTC 对话式 AI 官方方案和 `volcengine/rtc-aigc-demo`。
+优先参考豆包实时语音模型，先跑通端到端语音对话。
 
 原因：
 
-- RTC 负责低延迟音频传输。
-- 平台侧提供 ASR、TTS、音频 3A、VAD / 打断等实时能力。
-- CustomLLM 可以回调我们的 Agent Gateway。
-- 我们可以在 Gateway 内做意图识别、确认协议、场景路由和事件流。
+- 语音入口是这个项目的第一体验，必须先证明“可以自然说话”。
+- S2S 更接近用户感知，不需要先拆 ASR、LLM、TTS 级联。
+- 对视觉障碍和低操作门槛用户来说，低延迟、自然响应比第一天就能执行业务动作更重要。
 
 适合 Voice Engine 的原因：
 
-- 语音体验好。
-- 大脑可控。
-- 能保留 H5 / Native Bridge / Scenario Skill 的通用架构。
-- 后续可以替换或增加其他语音供应商。
+- 先把麦克风、音频播放、连接稳定性、会话状态和延迟打通。
+- H5 / Android WebView 可以先围绕一个“对话按钮 + 状态提示 + 字幕旁路”做最小体验。
+- 后续加 VAD、意图识别、场景动作时，不会推翻语音入口。
 
-### 3.2 第二阶段：评估豆包 S2S
+### 3.2 第二阶段：VAD / 打断
 
-在第一阶段跑通以后，再评估豆包端到端实时语音模型：
+在 S2S 对话跑通以后，再重点做打断体验：
 
-- 用于更自然的实时陪伴式反馈。
-- 用于非强业务动作的对话。
-- 用于需要情绪、语气、方言、声音控制的场景。
+- 用户插话时停止当前播报。
+- 用户说“停一下”“重来”“取消”时取消当前 turn。
+- H5 同步显示 `voice_interrupted`、`turn_cancelled` 等状态。
+- Android Shell 后续处理音频焦点、麦克风权限和后台状态。
 
-但强业务动作仍建议落到结构化事件：
+### 3.3 第三阶段：意图识别和业务路由
+
+等语音体验稳定后，再把自然语言转成结构化事件：
+
+- `route_decision`
+- `scenario_command`
+- `native_action`
+- `confirmation_required`
+
+强业务动作必须落到结构化事件：
 
 ```json
 {
@@ -110,12 +119,11 @@ H5 / Android WebView
 
 建议使用方式：
 
-1. 先按官方 README 跑通最小 Demo。
-2. 使用 `Server/scenes/Custom.json` 作为 ECHORURA 场景配置入口。
-3. 先用官方 LLM 配置确认 ASR、TTS、VAD、打断体验。
-4. 再把 LLM 配置切到 CustomLLM 或自定义服务地址。
-5. 将 CustomLLM 回调指向本项目的 Voice Gateway。
-6. Voice Gateway 返回可播报文本，同时输出结构化事件。
+1. 不把它作为第一刀。
+2. S2S 入口跑通后，用它对比 RTC + ASR + LLM + TTS 级联体验。
+3. 当需要更强文本控制或 CustomLLM 回调时，再使用 `Server/scenes/Custom.json` 作为 ECHORURA 场景配置入口。
+4. 将 CustomLLM 回调指向本项目的 Voice Gateway。
+5. Voice Gateway 返回可播报文本，同时输出结构化事件。
 
 最小接入假设：
 
@@ -213,7 +221,9 @@ Voice Gateway 不应该返回“自然语言里夹带业务动作”，而应该
 
 职责：
 
-- 接收 CustomLLM 回调。
+- 第一阶段不强依赖 Gateway，S2S 可以先直连语音入口 Demo。
+- 第二阶段接收 S2S / VAD 旁路事件，例如转写文本、打断状态、会话状态。
+- 第三阶段接收 CustomLLM 回调或语音转写文本。
 - 管理 `session_id`、`turn_id`、用户状态和上下文。
 - 调用 Semantic Router。
 - 返回可播报文本。
@@ -316,37 +326,41 @@ Voice Gateway 不应该返回“自然语言里夹带业务动作”，而应该
 
 ## 6. 建议 PoC 顺序
 
-### P0：官方 Demo 跑通
+### P0：S2S 可对话入口
 
 目标：
 
-- 跑通 `rtc-aigc-demo`。
-- 确认 RTC、ASR、TTS、VAD、打断体验。
-- 确认 CustomLLM 能否回调本地或测试服务。
+- 跑通豆包 S2S 实时语音对话。
+- 用户能按住或点击开始说话。
+- 系统能用语音实时回复。
+- H5 能显示连接、录音、播放、错误等基础状态。
 
 输出：
 
-- Demo 运行记录。
 - 必需凭证清单。
-- 延迟和打断体验记录。
-- `Server/scenes/Custom.json` 中需要替换的配置项清单。
-- 是否能接 CustomLLM 的结论。
-
-### P1：CustomLLM 接 Voice Gateway
-
-目标：
-
-- CustomLLM 回调到 `voice-engine/gateway`。
-- Gateway 返回固定回复。
-- H5 能看到语音事件。
-- 先不接真实音乐生成，只验证语音输入、Gateway 响应和 TTS 播报闭环。
+- Demo 运行记录。
+- S2S 连接方式、鉴权方式、音频格式记录。
+- 首包延迟、完整回复延迟、断线重连记录。
 
 验收：
 
-- 用户说一句话，Gateway 收到文本。
-- Gateway 返回可播报文本。
-- 前端收到 `turn_started`、`assistant_delta`、`turn_completed`。
-- Gateway 旁路输出符合 `voice-gateway-response.schema.json`。
+- 用户说“你好，陪我聊两句”，系统能语音回答。
+- 用户连续问两轮，系统能保持基础上下文。
+- H5 能显示 `connecting`、`listening`、`speaking`、`error`。
+
+### P1：VAD / 打断
+
+目标：
+
+- 用户插话时，系统停止当前播报。
+- 用户说“停一下”“取消”“重来”时，当前 turn 被取消或重置。
+- H5 能收到打断事件。
+
+验收：
+
+- 播报过程中用户说话，播报停止。
+- H5 收到 `voice_interrupted`。
+- 当前 turn 状态能从 `speaking` 回到 `listening`。
 
 ### P2：加入意图识别
 
@@ -362,7 +376,21 @@ Voice Gateway 不应该返回“自然语言里夹带业务动作”，而应该
 - “保存并发布” -> `music_creation.publish_work` + `requires_confirmation`
 - “打开作品页” -> `native_action`
 
-### P3：接 Mock Music Skill
+### P3：CustomLLM / Voice Gateway 旁路
+
+目标：
+
+- 如果 S2S 支持稳定文本旁路或 function calling，则把它接入 Gateway。
+- 如果 S2S 不能稳定输出结构化事件，则用 RTC + ASR/TTS + CustomLLM 作为业务路由补充链路。
+- Gateway 输出符合 `voice-gateway-response.schema.json`。
+
+验收：
+
+- Gateway 收到文本或语义事件。
+- Gateway 返回可播报文本。
+- H5 收到 `turn_started`、`route_decision`、`turn_completed`。
+
+### P4：接 Mock Music Skill
 
 目标：
 
@@ -377,7 +405,7 @@ Voice Gateway 不应该返回“自然语言里夹带业务动作”，而应该
 - H5 显示任务进度。
 - 后台记录 `work_id`、`version_id`、`template_id`。
 
-### P4：接真实音乐生成
+### P5：接真实音乐生成
 
 目标：
 

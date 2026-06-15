@@ -38,8 +38,9 @@ voice-engine/
 
 - H5 承载主要业务页面，Android WebView + Native Shell 提供语音、权限、Intent、分享、文件选择等系统能力。
 - Voice Engine 核心保持通用：会话、语音、路由、确认、事件流、H5/Native Bridge、能力调度。
-- 实时语音第一阶段优先复用火山 `rtc-aigc-demo` / RTC 对话式 AI 的 ASR、TTS、VAD、打断和音频 3A 能力；S2S 用于第二阶段评估自然语音体验。
-- 意图识别不交给 S2S 黑盒直接执行，必须落到 `route_decision`、`scenario_command`、`native_action` 等结构化事件。
+- 第一阶段先做 S2S 可对话语音入口，让用户能自然说话并听到实时回复。
+- 第二阶段再做 VAD / 打断，把插话、取消播报、取消当前 turn 的体验打磨稳定。
+- 第三阶段再做意图识别和业务路由，把稳定的对话输入转成 `route_decision`、`scenario_command`、`native_action` 等结构化事件。
 - 业务能力通过场景模块接入，例如 `music_creation`、`content_creation`、`education`、`support`。
 - 云手机 / mobile-use 不进入主路径，只作为远程代执行或无用户设备在线时的兜底能力。
 - 视觉障碍和低操作门槛体验优先，关键流程必须能被语音、键盘和屏幕阅读器完成。

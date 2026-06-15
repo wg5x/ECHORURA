@@ -33,13 +33,13 @@
 - H5 承载主要业务页面，Android WebView 和 PC Web 复用同一套页面。
 - Android Native Shell 负责麦克风、TTS/ASR、权限、Intent、分享、文件选择和无障碍增强。
 - 服务端负责 Voice Gateway、Semantic Router、Scenario Skill Router、业务任务编排和事件流。
-- 实时语音基础能力优先参考火山/豆包官方 `rtc-aigc-demo`：先复用 RTC + ASR + TTS + VAD + 打断能力，再把 CustomLLM 回调接入自有 Voice Gateway 做意图识别。
+- 实时语音入口优先做 S2S 可对话能力：先让用户能自然说话和听到实时回复，再做 VAD / 打断，最后接意图识别和业务动作。
 - 音乐创作作为首个 `music_creation` 场景接入；Web3 只是音乐场景的可选后台记录能力。
 
-建议下一步先做 Mock Demo：
+建议下一步先做语音入口 Demo：
 
-1. H5 跑通创作页、试听页、作品页和模板页。
-2. Mock Music Provider 返回固定音频和元数据。
-3. 用户用语音触发 `revise_song` 和 `publish_work`。
-4. 后台记录作品、模板、版本和来源关系。
-5. 找视觉障碍或低视力用户做可用性测试。
+1. H5 / Android WebView 跑通 S2S 实时对话。
+2. 验证麦克风采集、音频播放、连接稳定性和延迟。
+3. 加入 VAD / 打断，让用户能随时插话。
+4. 再接意图识别，把自然对话转成 `route_decision`。
+5. 最后接 Mock Music Skill，验证创作、修改、发布闭环。
