@@ -1,0 +1,42 @@
+flowchart TB
+    subgraph 端["端 (Web / App / 硬件)"]
+        U["用户：文本 / 语音 / 图像 / 视频"]
+    end
+
+    subgraph App["应用层 · Demohouse 26 Demo"]
+        VOICE["语音/实时交互类"]
+        AGENT["Agent/行动派类"]
+        GEN["内容生成类"]
+        RAG["检索/知识类"]
+        MOBILE["多模态/移动端类"]
+    end
+
+    subgraph SDK["框架层 · Arkitect SDK"]
+        LLM["LLM 调用"]
+        AG["Agent 框架<br/>(sub_agents/Runner/Hooks)"]
+        ASRTTS["ASR / TTS 流式"]
+        TOOL["Tool / MCP Client"]
+        CTX["Context / Prompt"]
+        TRACE["Telemetry / Trace"]
+    end
+
+    subgraph MCP["工具层 · MCP Server"]
+        M1["方舟Bot/联网"]
+        M2["浏览器自动化"]
+        M3["知识库"]
+        M4["PPT / 沙箱 / 函数 / 日志"]
+    end
+
+    subgraph Cloud["火山引擎云能力"]
+        ARK["方舟模型平台<br/>(豆包 Doubao / DeepSeek)"]
+        SPEECH["语音技术<br/>(ASR/TTS/声音复刻)"]
+        RTC["RTC 实时音视频"]
+        VIKING["VikingDB 向量库"]
+        VEFAAS["veFaaS 函数服务"]
+        TOS["TOS 对象存储"]
+        ACEP["云手机 ACEP"]
+    end
+
+    端 --> App --> SDK --> MCP
+    SDK --> Cloud
+    MCP --> Cloud

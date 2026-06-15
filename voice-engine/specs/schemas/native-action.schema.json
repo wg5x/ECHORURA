@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echorura.com/schemas/voice-engine/native-action.schema.json",
+  "title": "NativeAction",
+  "type": "object",
+  "required": ["type", "session_id", "turn_id", "action_id", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "native_action"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requires_confirmation": {
+      "type": "boolean",
+      "default": false
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "screen"],
+          "additionalProperties": true,
+          "properties": {
+            "kind": {
+              "const": "native_action"
+            },
+            "screen": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "uri"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "deeplink"
+            },
+            "uri": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "action"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "intent"
+            },
+            "action": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mime_type": {
+              "type": "string"
+            },
+            "extras": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

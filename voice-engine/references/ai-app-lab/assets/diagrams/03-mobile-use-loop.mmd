@@ -1,0 +1,9 @@
+flowchart LR
+    START([用户自然语言指令]) --> PREP["prepare<br/>装载系统提示词 + 上下文"]
+    PREP --> MODEL["model (大脑)<br/>截屏 + 豆包视觉理解 → 决定动作"]
+    MODEL --> VALID["tool_valid<br/>动作解析为 MCP 工具调用 + 坐标换算"]
+    VALID -->|解析失败| MODEL
+    VALID -->|完成| DONE([END])
+    VALID -->|继续| TOOL["tool (手)<br/>云手机执行 tap/swipe/input..."]
+    TOOL -->|界面刷新后再看| MODEL
+    TOOL -->|达到上限/完成| DONE

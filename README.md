@@ -8,6 +8,10 @@
 - `docs/网站与BP审阅总结.md`：对现有网站和 BP 的审阅总结，包含问题、对齐建议、商业模式分析和分工建议。
 - `docs/垂直化打法报告.md`：围绕“视觉障碍与低操作门槛人群”的垂直化战略打法，包含产品定位、Web3 角色、MVP 和路线图。
 - `docs/市场调研报告.md`：面向该垂直方向的市场调研，包含目标用户、竞品地图、市场空白、进入策略和验证指标。
+- `docs/投资人见面简报.md`：投资人沟通短版材料。
+- `output/pdf/投资人见面简报.pdf`：投资人简报可打印 PDF。
+- `docs/落地实施总览.md`：把战略、市场、投资人材料与 `voice-engine` 工程文档串起来，给出后续实施顺序。
+- `voice-engine/`：通用语音行动引擎的工程准备目录，包含产品边界、技术架构、命令协议和 ADR；音乐创作是首个业务场景。
 
 ## 当前核心方向
 
@@ -22,3 +26,20 @@
 - 模板复用和二创链路是否能自然发生。
 - 用户或机构是否愿意为生成、模板、无障碍创作工具或试点服务付费。
 
+## 工程落地方向
+
+`voice-engine` 当前采用 H5-first + Android Native Shell 主路径：
+
+- H5 承载主要业务页面，Android WebView 和 PC Web 复用同一套页面。
+- Android Native Shell 负责麦克风、TTS/ASR、权限、Intent、分享、文件选择和无障碍增强。
+- 服务端负责 Voice Gateway、Semantic Router、Scenario Skill Router、业务任务编排和事件流。
+- 实时语音基础能力优先参考火山/豆包官方 `rtc-aigc-demo`：先复用 RTC + ASR + TTS + VAD + 打断能力，再把 CustomLLM 回调接入自有 Voice Gateway 做意图识别。
+- 音乐创作作为首个 `music_creation` 场景接入；Web3 只是音乐场景的可选后台记录能力。
+
+建议下一步先做 Mock Demo：
+
+1. H5 跑通创作页、试听页、作品页和模板页。
+2. Mock Music Provider 返回固定音频和元数据。
+3. 用户用语音触发 `revise_song` 和 `publish_work`。
+4. 后台记录作品、模板、版本和来源关系。
+5. 找视觉障碍或低视力用户做可用性测试。

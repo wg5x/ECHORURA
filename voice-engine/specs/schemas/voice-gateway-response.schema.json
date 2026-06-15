@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echorura.com/schemas/voice-engine/voice-gateway-response.schema.json",
+  "title": "VoiceGatewayResponse",
+  "type": "object",
+  "required": ["session_id", "turn_id", "speakable_text", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "speakable_text": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "route-decision.schema.json"
+          },
+          {
+            "$ref": "native-action.schema.json"
+          },
+          {
+            "$ref": "scenario-command.schema.json"
+          },
+          {
+            "type": "object",
+            "required": ["type"],
+            "additionalProperties": true,
+            "properties": {
+              "type": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

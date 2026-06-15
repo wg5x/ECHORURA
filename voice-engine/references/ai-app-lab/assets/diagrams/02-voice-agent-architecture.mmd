@@ -1,0 +1,17 @@
+flowchart TB
+    U["用户语音"] -->|RTC| RTC["RTC 对话式 AI<br/>(ASR + VAD打断 + 降噪 + TTS)"]
+    RTC -->|"CustomLLM<br/>(OpenAI 兼容回调)"| GW["Arkitect Agent 网关 (大脑)"]
+
+    GW --> ROUTER{"语义分析 / 意图路由"}
+    ROUTER -->|客服| A1["客服 Agent<br/>(FC + RAG)"]
+    ROUTER -->|知识| A2["知识问答 Agent<br/>(知识库 MCP)"]
+    ROUTER -->|操作手机| A3["mobile-use Agent<br/>(云手机 MCP 工具)"]
+    ROUTER -->|陪伴| A4["陪伴 Agent<br/>(+ 长期记忆)"]
+    ROUTER -->|"…可扩展…"| A5["新业务 Agent (插槽)"]
+
+    A1 --> TOOLS["工具/数据/API"]
+    A2 --> TOOLS
+    A3 --> TOOLS
+    A4 --> TOOLS
+
+    GW -.结果文本流.-> RTC --> U

@@ -1,0 +1,42 @@
+flowchart TB
+    User["用户<br/>语音 / 触摸 / 键盘 / 屏幕阅读器"] --> H5["H5 工作台<br/>业务页面 / PC 复用 / WebView 复用"]
+    User --> AndroidShell["Android Native Shell<br/>WebView / Mic / Speaker / Permission / Intent"]
+
+    AndroidShell --> H5
+    H5 --> Bridge["JS Bridge<br/>Native Capability Adapter"]
+    Bridge --> AndroidShell
+    Bridge --> VoiceRuntime["实时语音层<br/>RTC 或端侧 ASR/TTS<br/>VAD / 打断 / 降噪"]
+    VoiceRuntime --> Gateway["Voice Gateway<br/>流式接口 / session / turn / cancel"]
+
+    Gateway --> Router["Semantic Router<br/>意图识别 / 参数抽取 / 风险判断"]
+
+    Router -->|chat| ChatAgent["Chat Agent<br/>帮助 / 解释 / 陪伴式反馈"]
+    Router -->|native_action| NativeAction["Native Action Adapter<br/>Intent / Deep Link / Native Action"]
+    Router -->|server_action| ServerAction["Server Action Adapter<br/>业务 API / MCP / 长任务"]
+    Router -->|scenario| ScenarioRouter["Scenario Skill Router<br/>music_creation / content_creation / education / support"]
+    Router -->|clarify| ClarifyAgent["Clarify Agent<br/>追问必要参数"]
+
+    NativeAction --> ActionRegistry["Action Registry<br/>白名单 / 参数校验 / 二次确认"]
+    ActionRegistry --> Bridge
+
+    ScenarioRouter --> MusicSkill["Music Creation Skill<br/>生成 / 修改 / 模板 / 发布"]
+    ScenarioRouter --> OtherSkill["Other Skills<br/>待扩展"]
+
+    MusicSkill --> MusicOrchestrator["Music Task Orchestrator<br/>生成 / 修改 / 总结"]
+    MusicOrchestrator --> MusicGen["Music Generation Provider<br/>歌词 / 曲风 / 人声 / 音频"]
+    MusicOrchestrator --> AssetStore["Asset Store<br/>音频 / 封面 / 歌词 / 元数据"]
+    MusicSkill --> Lineage["Lineage Ledger<br/>作品 / 模板 / 版本 / 二创链路"]
+    Lineage --> Web3Adapter["Web3 Adapter<br/>业务可选<br/>hash / 来源 / 分成规则"]
+
+    EventStream["Event Stream<br/>progress / task_result / final"]
+    ChatAgent --> Response["Streaming Response Adapter<br/>可播报文本 / 事件"]
+    ClarifyAgent --> Response
+    NativeAction --> Response
+    ServerAction --> EventStream
+    MusicOrchestrator --> EventStream
+    EventStream --> Response
+
+    Response --> VoiceRuntime
+    VoiceRuntime --> Bridge
+    Bridge --> H5
+    H5 --> User

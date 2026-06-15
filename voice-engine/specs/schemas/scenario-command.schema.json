@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echorura.com/schemas/voice-engine/scenario-command.schema.json",
+  "title": "ScenarioCommand",
+  "type": "object",
+  "required": ["type", "session_id", "turn_id", "scenario_id", "task_id", "intent", "arguments"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "scenario_command"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "work_id": {
+      "type": "string"
+    },
+    "base_version_id": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

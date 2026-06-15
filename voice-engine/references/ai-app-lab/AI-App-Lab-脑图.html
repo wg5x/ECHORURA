@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI App Lab · 项目脑图</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; }
+    svg.markmap { display: block; width: 100vw; height: 100vh; }
+    .tip {
+      position: fixed; left: 12px; bottom: 12px; z-index: 10;
+      font: 12px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #666; background: rgba(255,255,255,.85); padding: 6px 10px;
+      border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    }
+    .title {
+      position: fixed; left: 12px; top: 12px; z-index: 10;
+      font: 600 14px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #1a73e8; background: rgba(255,255,255,.85); padding: 6px 10px;
+      border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    }
+  </style>
+  <!-- markmap 配置：默认展开到 2 层 -->
+  <script>
+    window.markmap = {
+      autoLoader: {
+        manual: false,
+      },
+    };
+  </script>
+</head>
+<body>
+  <div class="title">AI App Lab · 火山方舟/豆包 项目脑图</div>
+  <div class="tip">提示：点击圆点折叠/展开 · 滚轮缩放 · 拖拽平移 · 右键可保存图片</div>
+
+  <div class="markmap" data-markmap-options="initialExpandLevel: 2; colorFreezeLevel: 2">
+    <script type="text/template">
+# AI App Lab
+
+## 定位
+- 火山方舟(豆包)官方 AI 应用实验室
+- 把大模型落地成可运行场景应用
+- 复制原型 + 叠加行业 Know-How
+
+## ① Arkitect SDK
+### 核心组件 core/component
+- llm 大模型调用 (BaseChatLanguageModel)
+- agent Agent框架 (BaseAgent/DefaultAgent)
+  - tools 挂工具
+  - sub_agents 挂子Agent(路由分发)
+  - instruction 角色指令
+- runner 执行器 (Runner + checkpoint)
+- llm_event_stream 事件流 + Hook
+- tool 工具/MCP (MCPClient)
+- context 上下文/Prompt渲染
+- prompts 提示词模板
+- asr 流式语音识别 (AsyncASRClient)
+- tts 流式语音合成 (AsyncTTSClient)
+- bot Bot封装
+- checkpoint 会话检查点 (Redis)
+- output_parser 结构化输出
+### 其它模块
+- launcher 本地serve / veFaaS部署
+- telemetry OpenTelemetry Trace
+- types 类型定义
+
+## ② Demohouse · 26个原型
+### 语音/实时交互
+- live_voice_call 实时语音(级联,半双工)
+- ⭐ rtc_conversational_ai RTC低延迟/可打断/CustomLLM
+- conversational_ai_embedded 嵌入式硬件(ESP32)
+- video_analyser 视频理解+语音问答
+### Agent/行动派
+- ⭐ mobile-use 云手机自动操作(LangGraph+MCP)
+- computer_use 桌面自动操作(UI-TARS)
+- vefaas-browser-use 浏览器自动化(Playwright)
+- deep_search_mcp Supervisor多Agent编排
+- ad_video_gen 营销视频(A2A四Agent)
+- game_agent_ai AI生成RPG游戏
+### 内容生成
+- chat2cartoon / _en 互动双语视频
+- storybook-agent 故事书/连环画
+- video_gen_demo 互动短剧(Streamlit)
+- media2doc 音视频转文档(Docker)
+### 检索/知识/推理
+- deep_search / _en 深度推理+联网
+- deepdoubao DeepSeek-R1推理+豆包总结
+- longterm_memory 长期记忆(mem0+VikingDB)
+- animal_recognition 图片检索+VLM介绍
+- quant_trading 股票AI辅助预测
+### 多模态/移动端
+- ⭐ multimodalkit_example 多模态SDK(安卓/iOS/Web)
+- pocket_pal 手机助手"所见即所说"
+- teacher_avatar 教师分身(拍照解题+语音)
+- snap_shop 拍照购物
+### 电商/客服
+- shop_assist 智能客服(FC+RAG)
+
+## ③ MCP Server · 7个
+- mcp_server_ark 方舟Bot/联网/链接解析
+- mcp_server_vefaas_browser_use 浏览器自动化
+- mcp_server_knowledgebase 知识库检索
+- mcp_server_ppt ChatPPT
+- mcp_server_vefaas_function 函数调用
+- mcp_server_vefaas_sandbox 沙箱执行
+- mcp_server_tls 日志服务
+
+## ④ Examples · 入门示例
+- agent_framework Agent+Hooks+Runner
+- human_in_the_loop 人机协同
+- quick_start Cookbook/Notebook
+
+## 技术栈
+- 后端: Python / FastAPI / LangGraph / MCP / Pydantic
+- 前端: React / Next.js / Vue3 / Streamlit
+- 移动硬件: Android / iOS / Multimodal Kit / ESP32
+- 其它: Go(MCP) / TypeScript(RPG.js)
+
+## 云能力
+- 方舟模型 (豆包 Doubao / DeepSeek)
+- 语音技术 (ASR / TTS / 声音复刻)
+- RTC 实时音视频
+- VikingDB 向量库
+- veFaaS 函数服务
+- TOS 对象存储
+- 云手机 ACEP
+
+## 实时语音方案对比
+- live_voice_call 级联/半双工(效果一般)
+- ⭐ RTC+CustomLLM 全双工/~1s/自定义大脑
+- 端到端S2S 最拟人(S2S-Omni/S2S-SC)
+
+## 推荐架构
+- 语音 → RTC → Agent网关(CustomLLM)
+- 语义路由 → 分发各业务Agent
+- mobile-use 作为工具挂入
+
+## 商机方向
+- 行业语音客服(最易变现)
+- 拟人陪伴/情感助手
+- 语音控制行动派Agent(差异化强)
+- 垂直语音助理(教育/导购/车载)
+- 企业知识语音问答台
+    </script>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+</body>
+</html>
