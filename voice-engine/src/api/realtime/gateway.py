@@ -30,6 +30,9 @@ class RealtimeGateway:
         self.current_assistant_text = ""
         self.chat_response_output_id = ""
         self.chat_response_text = ""
+        self.user_output_seq = 0
+        self.current_user_output_id = ""
+        self.current_user_text = ""
 
     async def run(self) -> None:
         await self.client_ws.accept()
@@ -116,6 +119,9 @@ class RealtimeGateway:
         self.current_assistant_text = ""
         self.chat_response_output_id = ""
         self.chat_response_text = ""
+        self.user_output_seq = 0
+        self.current_user_output_id = ""
+        self.current_user_text = ""
 
         await self._send_json({"type": "payload", "payload": redact_payload(payload), "warnings": warnings})
         await self._send_json({"type": "status", "status": "connecting", "warnings": warnings})
@@ -162,7 +168,12 @@ class RealtimeGateway:
                     text = _extract_asr_text(frame.payload)
                     if text:
                         self._reset_assistant_turn()
-                        await self._send_json({"type": "event", "event": _make_event("user", text)})
+                        await self._handle_user_asr_text(text)
+                    continue
+
+                if frame.event == SERVER_EVENTS["ASR_ENDED"]:
+                    self.current_user_output_id = ""
+                    self.current_user_text = ""
                     continue
 
                 if frame.event == SERVER_EVENTS["CHAT_RESPONSE"] and isinstance(frame.payload, dict) and frame.payload.get("content"):
@@ -268,11 +279,25 @@ class RealtimeGateway:
         self.current_assistant_output_id = f"assistant-output-{self.assistant_output_seq}"
         return self.current_assistant_output_id
 
+    def _next_user_output_id(self) -> str:
+        self.user_output_seq += 1
+        self.current_user_output_id = f"user-output-{self.user_output_seq}"
+        return self.current_user_output_id
+
     def _reset_assistant_turn(self) -> None:
         self.current_assistant_output_id = ""
         self.current_assistant_text = ""
         self.chat_response_output_id = ""
         self.chat_response_text = ""
+
+    async def _handle_user_asr_text(self, text: str) -> None:
+        clean_text = _collapse_repeated_text(text)
+        if not clean_text:
+            return
+
+        output_id = self.current_user_output_id or self._next_user_output_id()
+        self.current_user_text = _merge_asr_text(self.current_user_text, clean_text)
+        await self._send_json({"type": "event", "event": _make_event("user", self.current_user_text, output_id)})
 
     async def _handle_chat_response_content(self, content: str) -> None:
         text = _collapse_repeated_text(content)
@@ -344,6 +369,20 @@ def _merge_stream_text(previous: str, next_text: str) -> str:
         if previous[-overlap:] == next_text[:overlap]:
             return previous + next_text[overlap:]
     return previous + next_text
+
+
+def _merge_asr_text(previous: str, next_text: str) -> str:
+    previous = _collapse_repeated_text(previous)
+    next_text = _collapse_repeated_text(next_text)
+    if not previous:
+        return next_text
+    if not next_text or _is_text_already_covered(previous, next_text):
+        return previous
+    if _is_text_already_covered(next_text, previous):
+        return next_text
+    if abs(len(_normalize_text(next_text)) - len(_normalize_text(previous))) <= 2:
+        return next_text
+    return _merge_stream_text(previous, next_text)
 
 
 def _is_text_already_covered(existing: str, next_text: str) -> bool:
