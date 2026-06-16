@@ -18,6 +18,7 @@ type LogItem = {
   role: string;
   text: string;
   at: string;
+  outputId?: string;
 };
 
 const defaultConfig = {
@@ -186,7 +187,7 @@ export function App() {
     }
 
     if (data.type === "event") {
-      appendLog(data.event.type, data.event.text);
+      appendLog(data.event.type, data.event.text, data.event.outputId);
       return;
     }
 
@@ -234,11 +235,26 @@ export function App() {
     nextPlayTimeRef.current = 0;
   }
 
-  function appendLog(role: string, text: string) {
-    setLogs((items) => [
-      { id: crypto.randomUUID(), role, text, at: new Date().toLocaleTimeString("zh-CN", { hour12: false }) },
-      ...items
-    ]);
+  function appendLog(role: string, text: string, outputId?: string) {
+    setLogs((items) => {
+      if (outputId) {
+        const existingIndex = items.findIndex((item) => item.outputId === outputId);
+        if (existingIndex >= 0) {
+          return items.map((item, index) => (index === existingIndex ? { ...item, text } : item));
+        }
+      }
+
+      return [
+        {
+          id: crypto.randomUUID(),
+          role,
+          text,
+          outputId,
+          at: new Date().toLocaleTimeString("zh-CN", { hour12: false })
+        },
+        ...items
+      ];
+    });
   }
 
   function resetLogs() {

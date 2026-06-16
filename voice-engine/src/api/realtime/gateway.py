@@ -27,6 +27,9 @@ class RealtimeGateway:
         self.closing_upstream = False
         self.assistant_output_seq = 0
         self.current_assistant_output_id = ""
+        self.current_assistant_text = ""
+        self.chat_response_output_id = ""
+        self.chat_response_text = ""
 
     async def run(self) -> None:
         await self.client_ws.accept()
@@ -110,6 +113,9 @@ class RealtimeGateway:
         self.closing_upstream = False
         self.assistant_output_seq = 0
         self.current_assistant_output_id = ""
+        self.current_assistant_text = ""
+        self.chat_response_output_id = ""
+        self.chat_response_text = ""
 
         await self._send_json({"type": "payload", "payload": redact_payload(payload), "warnings": warnings})
         await self._send_json({"type": "status", "status": "connecting", "warnings": warnings})
@@ -155,17 +161,18 @@ class RealtimeGateway:
                 if frame.event == SERVER_EVENTS["ASR_RESPONSE"] and isinstance(frame.payload, dict):
                     text = _extract_asr_text(frame.payload)
                     if text:
+                        self._reset_assistant_turn()
                         await self._send_json({"type": "event", "event": _make_event("user", text)})
                     continue
 
                 if frame.event == SERVER_EVENTS["CHAT_RESPONSE"] and isinstance(frame.payload, dict) and frame.payload.get("content"):
-                    await self._send_assistant_text(str(frame.payload["content"]))
+                    await self._handle_chat_response_content(str(frame.payload["content"]))
                     continue
 
                 if frame.event in (SERVER_EVENTS["TTS_SENTENCE_START"], SERVER_EVENTS["TTS_SENTENCE_END"]):
                     text = frame.payload.get("text") if isinstance(frame.payload, dict) else None
                     if text:
-                        await self._send_assistant_text(str(text))
+                        await self._handle_tts_sentence_text(str(text))
                     continue
 
                 if frame.event == SERVER_EVENTS["TTS_RESPONSE"] and isinstance(frame.payload, bytes):
@@ -177,6 +184,11 @@ class RealtimeGateway:
                             "outputId": self.current_assistant_output_id or self._next_assistant_output_id(),
                         }
                     )
+                    continue
+
+                if frame.event in (SERVER_EVENTS["TTS_ENDED"], SERVER_EVENTS["CHAT_ENDED"]):
+                    self.chat_response_output_id = ""
+                    self.chat_response_text = ""
                     continue
 
                 if frame.event == SERVER_EVENTS["USAGE_RESPONSE"] and isinstance(frame.payload, dict) and frame.payload.get("usage"):
@@ -256,8 +268,38 @@ class RealtimeGateway:
         self.current_assistant_output_id = f"assistant-output-{self.assistant_output_seq}"
         return self.current_assistant_output_id
 
-    async def _send_assistant_text(self, text: str) -> None:
-        output_id = self.current_assistant_output_id or self._next_assistant_output_id()
+    def _reset_assistant_turn(self) -> None:
+        self.current_assistant_output_id = ""
+        self.current_assistant_text = ""
+        self.chat_response_output_id = ""
+        self.chat_response_text = ""
+
+    async def _handle_chat_response_content(self, content: str) -> None:
+        text = _collapse_repeated_text(content)
+        if not text:
+            return
+
+        if not self.chat_response_output_id:
+            self.chat_response_output_id = self.current_assistant_output_id or self._next_assistant_output_id()
+            self.chat_response_text = text
+        else:
+            self.chat_response_text = _merge_stream_text(self.chat_response_text, text)
+
+        await self._send_assistant_text(self.chat_response_text, self.chat_response_output_id)
+
+    async def _handle_tts_sentence_text(self, text: str) -> None:
+        clean_text = _collapse_repeated_text(text)
+        if not clean_text:
+            return
+
+        output_id = self.chat_response_output_id or self.current_assistant_output_id or self._next_assistant_output_id()
+        if _is_text_already_covered(self.current_assistant_text, clean_text):
+            return
+        await self._send_assistant_text(clean_text, output_id)
+
+    async def _send_assistant_text(self, text: str, output_id: str) -> None:
+        self.current_assistant_output_id = output_id
+        self.current_assistant_text = text
         await self._send_json({"type": "event", "event": _make_event("assistant", text, output_id)})
 
     async def _send_json(self, payload: dict[str, Any]) -> None:
@@ -285,3 +327,40 @@ def _make_event(event_type: str, text: str, output_id: str | None = None) -> dic
     if output_id:
         event["outputId"] = output_id
     return event
+
+
+def _merge_stream_text(previous: str, next_text: str) -> str:
+    previous = _collapse_repeated_text(previous)
+    next_text = _collapse_repeated_text(next_text)
+    if not previous:
+        return next_text
+    if not next_text or _is_text_already_covered(previous, next_text):
+        return previous
+    if next_text.startswith(previous):
+        return next_text
+
+    max_overlap = min(len(previous), len(next_text))
+    for overlap in range(max_overlap, 0, -1):
+        if previous[-overlap:] == next_text[:overlap]:
+            return previous + next_text[overlap:]
+    return previous + next_text
+
+
+def _is_text_already_covered(existing: str, next_text: str) -> bool:
+    existing_normalized = _normalize_text(existing)
+    next_normalized = _normalize_text(next_text)
+    return bool(next_normalized and next_normalized in existing_normalized)
+
+
+def _collapse_repeated_text(text: str) -> str:
+    text = text.strip()
+    if not text:
+        return ""
+    half = len(text) // 2
+    if len(text) % 2 == 0 and text[:half] == text[half:]:
+        return text[:half]
+    return text
+
+
+def _normalize_text(text: str) -> str:
+    return "".join(str(text or "").split())
