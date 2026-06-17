@@ -10,7 +10,6 @@ type ServerEvent =
   | { type: "event"; event: { id: string; type: "user" | "assistant"; text: string; at: string; outputId?: string } }
   | { type: "audio"; data: string; mime: string; outputId?: string }
   | { type: "usage"; usage: Record<string, unknown> }
-  | { type: "interrupt_ack"; targetOutputId?: string }
   | { type: "error"; message: string };
 
 type LogItem = {
@@ -25,9 +24,11 @@ const defaultConfig = {
   mode: "o2",
   botName: "ECHORURA",
   speaker: "zh_female_vv_jupiter_bigtts",
-  systemRole: "你是 ECHORURA 的语音入口助手。先用简短中文自然对话，帮助用户验证实时语音链路，不执行音乐创作业务动作。",
+  systemRole: "你是 ECHORURA 的语音入口助手。先用简短中文自然对话，支持唱歌请求和联网搜索。",
   speakingStyle: "表达自然、简短、友好。优先一句话回答。",
-  openingLine: "你好，我是 ECHORURA。我们先测试实时语音对话。"
+  openingLine: "你好，我是 ECHORURA。你可以和我语音对话，也可以让我唱歌或联网搜索。",
+  enableWebSearch: true,
+  enableMusic: true
 };
 
 export function App() {
@@ -103,15 +104,6 @@ export function App() {
       ws.close();
     }
     setStatus("idle");
-  }
-
-  function interrupt() {
-    stopPlayback();
-    const ws = socketRef.current;
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "interrupt" }));
-    }
-    appendLog("system", "已发送打断。");
   }
 
   function sendText() {
@@ -201,11 +193,6 @@ export function App() {
       return;
     }
 
-    if (data.type === "interrupt_ack") {
-      appendLog("system", "服务端已确认打断。");
-      return;
-    }
-
     if (data.type === "error") {
       setStatus("error");
       appendLog("error", data.message);
@@ -274,9 +261,6 @@ export function App() {
       <section className="controls">
         <button type="button" onClick={startCall} disabled={status !== "idle"}>
           开始通话
-        </button>
-        <button type="button" onClick={interrupt} disabled={status !== "connected"}>
-          打断
         </button>
         <button type="button" onClick={endCall} disabled={status === "idle"}>
           结束

@@ -25,7 +25,7 @@ VOLC_API_APP_ID=
 VOLC_API_ACCESS_KEY=
 ```
 
-`VOLC_API_APP_KEY`、`VOLC_API_RESOURCE_ID` 和 `VOLC_WS_URL` 默认使用火山文档值。
+`VOLC_API_APP_KEY`、`VOLC_API_RESOURCE_ID` 和 `VOLC_WS_URL` 默认使用火山文档值。默认会话已开启唱歌和火山联网搜索，联网搜索还需要填写 `VOLC_WEBSEARCH_API_KEY`。
 
 ## 运行
 
@@ -60,4 +60,3 @@ http://127.0.0.1:5173/
 - 页面状态从 `connecting` 变为 `connected`。
 - 能看到 ASR 文本、助手文本。
 - 能播放火山返回的 24k PCM 音频。
-- “打断”按钮会向上游发送 `CLIENT_INTERRUPT`。

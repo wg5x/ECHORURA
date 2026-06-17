@@ -93,16 +93,6 @@ class RealtimeGateway:
                     await self._send_json({"type": "error", "message": "发送文本到火山实时语音失败。"})
             return
 
-        if message.get("type") == "interrupt":
-            if self.upstream and self.session_id:
-                try:
-                    await self.upstream.send(make_json_frame(CLIENT_EVENTS["CLIENT_INTERRUPT"], {}, self.session_id))
-                except Exception:
-                    await self._send_json({"type": "error", "message": "发送打断事件到火山实时语音失败。"})
-                    return
-            await self._send_json({"type": "interrupt_ack", "targetOutputId": self.current_assistant_output_id})
-            return
-
         if message.get("type") == "finish":
             await self._finish()
             return
