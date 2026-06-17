@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { decodeBase64Pcm16, encodePcm16, resampleTo16k } from "../lib/audio";
-import { DEFAULT_VOICE_PROFILE } from "./voiceProfiles";
+import { DEFAULT_VOICE_PROFILE, VOICE_PROFILES, findVoiceProfile } from "./voiceProfiles";
 import "./styles.css";
 
 type Status = "idle" | "connecting" | "connected" | "error";
@@ -44,6 +44,8 @@ export function App() {
   const [textInput, setTextInput] = useState("");
   const [health, setHealth] = useState("unchecked");
   const [metrics, setMetrics] = useState<Metrics>(emptyMetrics);
+  const [selectedProfileId, setSelectedProfileId] = useState(DEFAULT_VOICE_PROFILE.id);
+  const selectedProfile = findVoiceProfile(selectedProfileId);
   const socketRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const inputContextRef = useRef<AudioContext | null>(null);
@@ -82,7 +84,7 @@ export function App() {
       if (!micReady) {
         appendLog("system", "麦克风未开启，仍可使用文字输入测试 S2S。");
       }
-      ws.send(JSON.stringify({ type: "start", config: DEFAULT_VOICE_PROFILE.config }));
+      ws.send(JSON.stringify({ type: "start", config: selectedProfile.config }));
     };
 
     ws.onmessage = (message) => {
@@ -320,6 +322,24 @@ export function App() {
           检查后端
         </button>
         <span>{health}</span>
+      </section>
+
+      <section className="profile-panel">
+        <label htmlFor="voice-profile">Voice Profile</label>
+        <select
+          id="voice-profile"
+          value={selectedProfileId}
+          onChange={(event) => setSelectedProfileId(event.target.value)}
+          disabled={status !== "idle"}
+        >
+          {VOICE_PROFILES.map((profile) => (
+            <option key={profile.id} value={profile.id}>
+              {profile.name}
+            </option>
+          ))}
+        </select>
+        <span>{selectedProfile.description}</span>
+        <span>speaker: {selectedProfile.config.speaker}</span>
       </section>
 
       <section className="text-input">

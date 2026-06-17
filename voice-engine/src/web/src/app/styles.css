@@ -9,7 +9,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -87,6 +88,32 @@ button:disabled {
 
 .controls span {
   color: #5c6670;
+}
+
+.profile-panel {
+  display: grid;
+  grid-template-columns: 120px minmax(220px, 280px) 1fr;
+  gap: 10px 12px;
+  align-items: center;
+  margin-top: 20px;
+  color: #5c6670;
+}
+
+.profile-panel label {
+  color: #172026;
+  font-weight: 700;
+}
+
+.profile-panel select {
+  height: 40px;
+  border: 1px solid #b9c0c6;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.profile-panel span {
+  overflow-wrap: anywhere;
 }
 
 .text-input input {
@@ -209,8 +236,13 @@ button:disabled {
   }
 
   .text-input input,
+  .profile-panel select,
   button {
     width: 100%;
+  }
+
+  .profile-panel {
+    grid-template-columns: 1fr;
   }
 
   .log-item {
