@@ -34,8 +34,8 @@ flowchart TB
     AndroidShell --> H5
     H5 --> Bridge["JS Bridge<br/>Native Capability Adapter"]
     Bridge --> AndroidShell
-    Bridge --> VoiceRuntime["实时语音层<br/>RTC 或端侧 ASR/TTS<br/>VAD / 打断 / 降噪"]
-    VoiceRuntime --> Gateway["Voice Gateway<br/>流式接口 / session / turn / cancel"]
+    Bridge --> VoiceRuntime["实时语音层<br/>S2S / ASR / TTS<br/>音色参数 / 降噪"]
+    VoiceRuntime --> Gateway["Voice Gateway<br/>流式接口 / session / turn / progress"]
 
     Gateway --> Router["Semantic Router<br/>意图识别 / 参数抽取 / 风险判断"]
 
@@ -108,7 +108,7 @@ flowchart TB
 职责：
 
 - S2S 对话入口：用户说话后直接获得语音回复，先验证自然对话体验。
-- VAD / 打断：用户插话时停止当前播报或取消当前 turn，作为第二阶段重点。
+- 音色与会话参数：管理音色、模式、system role、联网、唱歌等 S2S StartSession 配置。
 - ASR / 文本旁路：在需要意图识别时，把用户语音同步转成文本或结构化事件。
 - TTS / 语音输出：非 S2S 链路或业务播报需要时，把模型回复转语音。
 - 音频 3A：降噪、回声消除、自动增益等基础音频处理。
@@ -118,7 +118,7 @@ flowchart TB
 边界：
 
 - S2S 阶段先不追求业务动作执行，只验证语音输入、语音输出、延迟、稳定性和基础上下文。
-- VAD / 打断阶段先处理体验事件，例如 `voice_interrupted`、`turn_cancelled`。
+- VAD / 打断暂不纳入当前实现；后续需要先明确播放链路、上游事件语义和可自动化测试方案。
 - 意图识别、二次确认、业务路由和执行权限放到第三阶段，由 Voice Gateway / Semantic Router 控制。
 
 ### 3.5 Voice Gateway

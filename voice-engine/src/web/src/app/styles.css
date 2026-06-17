@@ -111,6 +111,42 @@ button:disabled {
   margin: 4px 0;
 }
 
+.metrics-panel {
+  margin-top: 24px;
+}
+
+.metrics-panel h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.metrics-panel dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.metrics-panel dl > div {
+  min-width: 0;
+  border: 1px solid #d8d2c8;
+  border-radius: 6px;
+  background: #fff;
+  padding: 12px;
+}
+
+.metrics-panel dt {
+  color: #6e7780;
+  font-size: 13px;
+}
+
+.metrics-panel dd {
+  overflow-wrap: anywhere;
+  margin: 6px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .log-panel {
   margin-top: 24px;
 }
@@ -180,5 +216,9 @@ button:disabled {
   .log-item {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+
+  .metrics-panel dl {
+    grid-template-columns: 1fr;
   }
 }

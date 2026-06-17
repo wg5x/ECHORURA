@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import unicodedata
 import uuid
 from datetime import datetime
 from typing import Any
@@ -366,10 +367,17 @@ def _merge_asr_text(previous: str, next_text: str) -> str:
     next_text = _collapse_repeated_text(next_text)
     if not previous:
         return next_text
-    if not next_text or _is_text_already_covered(previous, next_text):
+    if not next_text:
         return previous
-    if _is_text_already_covered(next_text, previous):
+
+    previous_normalized = _normalize_text(previous)
+    next_normalized = _normalize_text(next_text)
+    if previous_normalized == next_normalized:
         return next_text
+    if previous_normalized and previous_normalized in next_normalized:
+        return next_text
+    if next_normalized and next_normalized in previous_normalized:
+        return previous
     if abs(len(_normalize_text(next_text)) - len(_normalize_text(previous))) <= 2:
         return next_text
     return _merge_stream_text(previous, next_text)
@@ -392,4 +400,4 @@ def _collapse_repeated_text(text: str) -> str:
 
 
 def _normalize_text(text: str) -> str:
-    return "".join(str(text or "").split())
+    return "".join(char for char in str(text or "") if not char.isspace() and not unicodedata.category(char).startswith("P"))

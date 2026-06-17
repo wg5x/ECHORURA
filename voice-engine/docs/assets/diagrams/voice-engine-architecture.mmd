@@ -5,8 +5,8 @@ flowchart TB
     AndroidShell --> H5
     H5 --> Bridge["JS Bridge<br/>Native Capability Adapter"]
     Bridge --> AndroidShell
-    Bridge --> VoiceRuntime["实时语音层<br/>RTC 或端侧 ASR/TTS<br/>VAD / 打断 / 降噪"]
-    VoiceRuntime --> Gateway["Voice Gateway<br/>流式接口 / session / turn / cancel"]
+    Bridge --> VoiceRuntime["实时语音层<br/>S2S / ASR / TTS<br/>音色参数 / 降噪"]
+    VoiceRuntime --> Gateway["Voice Gateway<br/>流式接口 / session / turn / progress"]
 
     Gateway --> Router["Semantic Router<br/>意图识别 / 参数抽取 / 风险判断"]
 

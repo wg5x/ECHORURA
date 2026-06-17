@@ -20,6 +20,22 @@ type LogItem = {
   outputId?: string;
 };
 
+type Metrics = {
+  connectedAtMs?: number;
+  firstAudioAtMs?: number;
+  audioChunks: number;
+  userEvents: number;
+  assistantEvents: number;
+  lastError: string;
+};
+
+const emptyMetrics: Metrics = {
+  audioChunks: 0,
+  userEvents: 0,
+  assistantEvents: 0,
+  lastError: ""
+};
+
 const defaultConfig = {
   mode: "o2",
   botName: "ECHORURA",
@@ -37,6 +53,7 @@ export function App() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [textInput, setTextInput] = useState("");
   const [health, setHealth] = useState("unchecked");
+  const [metrics, setMetrics] = useState<Metrics>(emptyMetrics);
   const socketRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const inputContextRef = useRef<AudioContext | null>(null);
@@ -45,6 +62,7 @@ export function App() {
   const outputContextRef = useRef<AudioContext | null>(null);
   const nextPlayTimeRef = useRef(0);
   const audioUploadReadyRef = useRef(false);
+  const callStartedAtRef = useRef<number | null>(null);
 
   async function checkHealth() {
     try {
@@ -61,6 +79,8 @@ export function App() {
     resetLogs();
     setStatus("connecting");
     setWarnings([]);
+    resetMetrics();
+    callStartedAtRef.current = performance.now();
     await checkHealth();
 
     const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/realtime`);
@@ -81,6 +101,7 @@ export function App() {
     };
 
     ws.onerror = () => {
+      markError("本地 S2S 网关连接失败。");
       setStatus("error");
       appendLog("error", "本地 S2S 网关连接失败。");
     };
@@ -147,7 +168,9 @@ export function App() {
       sourceRef.current = source;
       return true;
     } catch (error) {
-      appendLog("error", error instanceof Error ? error.message : "麦克风启动失败。");
+      const message = error instanceof Error ? error.message : "麦克风启动失败。";
+      markError(message);
+      appendLog("error", message);
       return false;
     }
   }
@@ -167,6 +190,7 @@ export function App() {
     if (data.type === "status") {
       setStatus(data.status);
       audioUploadReadyRef.current = data.status === "connected";
+      if (data.status === "connected") markConnected();
       if (data.warnings?.length) setWarnings(data.warnings);
       appendLog("system", `status: ${data.status}`);
       return;
@@ -179,11 +203,13 @@ export function App() {
     }
 
     if (data.type === "event") {
+      markTextEvent(data.event.type);
       appendLog(data.event.type, data.event.text, data.event.outputId);
       return;
     }
 
     if (data.type === "audio") {
+      markAudioChunk();
       playPcm24k(data.data);
       return;
     }
@@ -195,6 +221,7 @@ export function App() {
 
     if (data.type === "error") {
       setStatus("error");
+      markError(data.message);
       appendLog("error", data.message);
     }
   }
@@ -248,6 +275,40 @@ export function App() {
     setLogs([]);
   }
 
+  function resetMetrics() {
+    setMetrics(emptyMetrics);
+  }
+
+  function markConnected() {
+    const startedAt = callStartedAtRef.current;
+    setMetrics((current) => ({
+      ...current,
+      connectedAtMs: startedAt ? Math.round(performance.now() - startedAt) : undefined
+    }));
+  }
+
+  function markTextEvent(role: "user" | "assistant") {
+    setMetrics((current) => ({
+      ...current,
+      userEvents: role === "user" ? current.userEvents + 1 : current.userEvents,
+      assistantEvents: role === "assistant" ? current.assistantEvents + 1 : current.assistantEvents
+    }));
+  }
+
+  function markAudioChunk() {
+    const startedAt = callStartedAtRef.current;
+    setMetrics((current) => ({
+      ...current,
+      firstAudioAtMs:
+        current.firstAudioAtMs ?? (startedAt ? Math.round(performance.now() - startedAt) : undefined),
+      audioChunks: current.audioChunks + 1
+    }));
+  }
+
+  function markError(message: string) {
+    setMetrics((current) => ({ ...current, lastError: message }));
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -293,6 +354,36 @@ export function App() {
         </section>
       ) : null}
 
+      <section className="metrics-panel">
+        <h2>诊断</h2>
+        <dl>
+          <div>
+            <dt>连接耗时</dt>
+            <dd>{formatMs(metrics.connectedAtMs)}</dd>
+          </div>
+          <div>
+            <dt>首段音频</dt>
+            <dd>{formatMs(metrics.firstAudioAtMs)}</dd>
+          </div>
+          <div>
+            <dt>音频片段</dt>
+            <dd>{metrics.audioChunks}</dd>
+          </div>
+          <div>
+            <dt>用户文本</dt>
+            <dd>{metrics.userEvents}</dd>
+          </div>
+          <div>
+            <dt>助手文本</dt>
+            <dd>{metrics.assistantEvents}</dd>
+          </div>
+          <div>
+            <dt>最近错误</dt>
+            <dd>{metrics.lastError || "-"}</dd>
+          </div>
+        </dl>
+      </section>
+
       <section className="log-panel">
         <h2>事件</h2>
         <ul>
@@ -313,4 +404,8 @@ declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;
   }
+}
+
+function formatMs(value?: number) {
+  return typeof value === "number" ? `${value} ms` : "-";
 }

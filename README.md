@@ -33,13 +33,16 @@
 - H5 承载主要业务页面，Android WebView 和 PC Web 复用同一套页面。
 - Android Native Shell 负责麦克风、TTS/ASR、权限、Intent、分享、文件选择和无障碍增强。
 - 服务端负责 Voice Gateway、Semantic Router、Scenario Skill Router、业务任务编排和事件流。
-- 实时语音入口优先做 S2S 可对话能力：先让用户能自然说话和听到实时回复，再做 VAD / 打断，最后接意图识别和业务动作。
+- 实时语音入口优先做 S2S 可对话能力：先让用户能自然说话和听到实时回复，再抽离音色与会话参数、补齐观测和测试基线，最后接意图识别和业务动作。
 - 音乐创作作为首个 `music_creation` 场景接入；Web3 只是音乐场景的可选后台记录能力。
 
 建议下一步先做语音入口 Demo：
 
 1. H5 / Android WebView 跑通 S2S 实时对话。
 2. 验证麦克风采集、音频播放、连接稳定性和延迟。
-3. 加入 VAD / 打断，让用户能随时插话。
-4. 再接意图识别，把自然对话转成 `route_decision`。
-5. 最后接 Mock Music Skill，验证创作、修改、发布闭环。
+3. 抽离音色、模式、system role、联网、唱歌等会话参数，形成可测的 Voice Profile。
+4. 增加 S2S 事件、payload、延迟和错误记录，为后续声音类能力建立测试基线。
+5. 再接意图识别，把自然对话转成 `route_decision`。
+6. 最后接 Mock Music Skill，验证创作、修改、发布闭环。
+
+VAD / 打断暂不进入当前主线；只有在技术方案和可测试方案明确后，再作为独立迭代评估。
