@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import re
 import unicodedata
 import uuid
 from datetime import datetime
@@ -11,10 +12,11 @@ from typing import Any
 import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 
-from ..config import get_volc_headers, get_volc_ws_url, has_volc_credentials
+from ..config import get_recordings_dir, get_volc_headers, get_volc_ws_url, has_volc_credentials, is_voice_recording_enabled
 from ..integrations.volc.events import CLIENT_EVENTS, SERVER_EVENTS
 from ..integrations.volc.frames import make_audio_frame, make_json_frame, parse_server_frame
 from ..integrations.volc.payload import build_start_session_payload, redact_payload
+from .recording import LocalSessionRecorder
 
 
 class RealtimeGateway:
@@ -34,6 +36,7 @@ class RealtimeGateway:
         self.user_output_seq = 0
         self.current_user_output_id = ""
         self.current_user_text = ""
+        self.recorder: LocalSessionRecorder | None = None
 
     async def run(self) -> None:
         await self.client_ws.accept()
@@ -52,11 +55,14 @@ class RealtimeGateway:
         finally:
             await self._close_upstream()
             await self._cancel_tasks()
+            self._close_recorder()
 
     async def _handle_binary(self, raw: bytes) -> None:
         if not self.upstream or not self.session_id:
             return
         try:
+            if self.recorder:
+                self.recorder.write_input(raw)
             await self.upstream.send(make_audio_frame(CLIENT_EVENTS["TASK_REQUEST"], raw, self.session_id))
         except Exception:
             await self._send_json({"type": "error", "message": "发送音频到火山实时语音失败。"})
@@ -113,6 +119,8 @@ class RealtimeGateway:
         self.user_output_seq = 0
         self.current_user_output_id = ""
         self.current_user_text = ""
+        self._close_recorder()
+        self.recorder = LocalSessionRecorder(is_voice_recording_enabled(), get_recordings_dir(), self.session_id)
 
         await self._send_json({"type": "payload", "payload": redact_payload(payload), "warnings": warnings})
         await self._send_json({"type": "status", "status": "connecting", "warnings": warnings})
@@ -178,6 +186,8 @@ class RealtimeGateway:
                     continue
 
                 if frame.event == SERVER_EVENTS["TTS_RESPONSE"] and isinstance(frame.payload, bytes):
+                    if self.recorder:
+                        self.recorder.write_output(frame.payload)
                     await self._send_json(
                         {
                             "type": "audio",
@@ -245,6 +255,7 @@ class RealtimeGateway:
         self.upstream = None
         self.session_id = ""
         self.upstream_ready = False
+        self._close_recorder()
         if upstream:
             try:
                 await upstream.close()
@@ -265,6 +276,11 @@ class RealtimeGateway:
                 pass
             setattr(self, attr, None)
 
+    def _close_recorder(self) -> None:
+        if self.recorder:
+            self.recorder.close()
+            self.recorder = None
+
     def _next_assistant_output_id(self) -> str:
         self.assistant_output_seq += 1
         self.current_assistant_output_id = f"assistant-output-{self.assistant_output_seq}"
@@ -282,7 +298,7 @@ class RealtimeGateway:
         self.chat_response_text = ""
 
     async def _handle_user_asr_text(self, text: str) -> None:
-        clean_text = _collapse_repeated_text(text)
+        clean_text = _clean_display_text(text)
         if not clean_text:
             return
 
@@ -291,7 +307,7 @@ class RealtimeGateway:
         await self._send_json({"type": "event", "event": _make_event("user", self.current_user_text, output_id)})
 
     async def _handle_chat_response_content(self, content: str) -> None:
-        text = _collapse_repeated_text(content)
+        text = _clean_display_text(content)
         if not text:
             return
 
@@ -304,7 +320,7 @@ class RealtimeGateway:
         await self._send_assistant_text(self.chat_response_text, self.chat_response_output_id)
 
     async def _handle_tts_sentence_text(self, text: str) -> None:
-        clean_text = _collapse_repeated_text(text)
+        clean_text = _clean_display_text(text)
         if not clean_text:
             return
 
@@ -396,6 +412,17 @@ def _collapse_repeated_text(text: str) -> str:
     half = len(text) // 2
     if len(text) % 2 == 0 and text[:half] == text[half:]:
         return text[:half]
+    return text
+
+
+def _clean_display_text(text: str) -> str:
+    text = _collapse_repeated_text(text)
+    if not text:
+        return ""
+
+    text = re.sub(r"(?<=[\u3400-\u9fff])\s+(?=[\u3400-\u9fff])", "", text)
+    text = re.sub(r"(?<=[\u3400-\u9fff])\s+(?=[，。！？、；：])", "", text)
+    text = re.sub(r"(?<=[，。！？、；：])\s+(?=[\u3400-\u9fff])", "", text)
     return text
 
 

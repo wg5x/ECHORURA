@@ -13,6 +13,7 @@ DEFAULT_PORT = 8787
 DEFAULT_VOLC_WS_URL = "wss://openspeech.bytedance.com/api/v3/realtime/dialogue"
 DEFAULT_VOLC_RESOURCE_ID = "volc.speech.dialog"
 PUBLIC_APP_KEY = "PlgvMymc7f3tQnJ6"
+DEFAULT_RECORDINGS_DIR = SRC_DIR / "data" / "recordings"
 
 ENV_FILES = (
     SRC_DIR / ".env.local",
@@ -58,3 +59,12 @@ def get_volc_headers(connect_id: str) -> dict[str, str]:
         "X-Api-App-Key": os.environ.get("VOLC_API_APP_KEY") or PUBLIC_APP_KEY,
         "X-Api-Connect-Id": connect_id,
     }
+
+
+def is_voice_recording_enabled() -> bool:
+    return os.environ.get("VOICE_RECORDING_ENABLED", "").lower() == "true"
+
+
+def get_recordings_dir() -> Path:
+    configured_dir = Path(os.environ.get("VOICE_RECORDINGS_DIR") or DEFAULT_RECORDINGS_DIR)
+    return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir

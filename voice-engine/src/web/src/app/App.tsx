@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { decodeBase64Pcm16, encodePcm16, resampleTo16k } from "../lib/audio";
+import { DEFAULT_VOICE_PROFILE } from "./voiceProfiles";
 import "./styles.css";
 
 type Status = "idle" | "connecting" | "connected" | "error";
@@ -34,17 +35,6 @@ const emptyMetrics: Metrics = {
   userEvents: 0,
   assistantEvents: 0,
   lastError: ""
-};
-
-const defaultConfig = {
-  mode: "o2",
-  botName: "ECHORURA",
-  speaker: "zh_female_vv_jupiter_bigtts",
-  systemRole: "你是 ECHORURA 的语音入口助手。先用简短中文自然对话，支持唱歌请求和联网搜索。",
-  speakingStyle: "表达自然、简短、友好。优先一句话回答。",
-  openingLine: "你好，我是 ECHORURA。你可以和我语音对话，也可以让我唱歌或联网搜索。",
-  enableWebSearch: true,
-  enableMusic: true
 };
 
 export function App() {
@@ -92,7 +82,7 @@ export function App() {
       if (!micReady) {
         appendLog("system", "麦克风未开启，仍可使用文字输入测试 S2S。");
       }
-      ws.send(JSON.stringify({ type: "start", config: defaultConfig }));
+      ws.send(JSON.stringify({ type: "start", config: DEFAULT_VOICE_PROFILE.config }));
     };
 
     ws.onmessage = (message) => {

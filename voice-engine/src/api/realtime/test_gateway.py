@@ -1,6 +1,6 @@
 import unittest
 
-from .gateway import _merge_asr_text
+from .gateway import _clean_display_text, _merge_asr_text
 
 
 class AsrTextMergeTest(unittest.TestCase):
@@ -32,6 +32,18 @@ class AsrTextMergeTest(unittest.TestCase):
         second = "周杰伦的歌曲晴天"
 
         self.assertEqual(_merge_asr_text(first, second), "麻烦帮我播放周杰伦的歌曲晴天")
+
+
+class DisplayTextCleanTest(unittest.TestCase):
+    def test_removes_spaces_between_chinese_characters(self) -> None:
+        text = "我 在 用心 的 来 爱着 你 ， 为何 不见 你 对 我 用 真情"
+
+        self.assertEqual(_clean_display_text(text), "我在用心的来爱着你，为何不见你对我用真情")
+
+    def test_keeps_spaces_between_latin_words(self) -> None:
+        text = "Play the song Hello World"
+
+        self.assertEqual(_clean_display_text(text), "Play the song Hello World")
 
 
 if __name__ == "__main__":
