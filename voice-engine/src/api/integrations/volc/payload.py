@@ -3,64 +3,14 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from ...configs.voice_profile_config import (
+    DEFAULT_O2_SPEAKER,
+    DEFAULT_SC2_SPEAKER,
+    O2_SPEAKERS,
+    SC2_SPEAKERS,
+    default_realtime_config,
+)
 from ...shared.value_utils import to_bool, to_int_in_range, to_string_value
-
-
-DEFAULT_O2_SPEAKER = "zh_female_vv_jupiter_bigtts"
-DEFAULT_SC2_SPEAKER = "saturn_zh_female_aojiaonvyou_tob"
-
-O2_SPEAKERS = {
-    "zh_female_vv_jupiter_bigtts",
-    "zh_female_xiaohe_jupiter_bigtts",
-    "zh_male_yunzhou_jupiter_bigtts",
-    "zh_male_xiaotian_jupiter_bigtts",
-}
-
-SC2_SPEAKERS = {
-    "saturn_zh_female_aojiaonvyou_tob",
-    "saturn_zh_female_bingjiaojiejie_tob",
-    "saturn_zh_female_chengshujiejie_tob",
-    "saturn_zh_female_keainvsheng_tob",
-    "saturn_zh_female_nuanxinxuejie_tob",
-    "saturn_zh_female_tiexinnvyou_tob",
-    "saturn_zh_female_wenrouwenya_tob",
-    "saturn_zh_female_wumeiyujie_tob",
-    "saturn_zh_female_xingganyujie_tob",
-    "saturn_zh_male_aiqilingren_tob",
-    "saturn_zh_male_aojiaogongzi_tob",
-    "saturn_zh_male_aojiaojingying_tob",
-    "saturn_zh_male_aomanshaoye_tob",
-    "saturn_zh_male_badaoshaoye_tob",
-    "saturn_zh_male_bingjiaobailian_tob",
-    "saturn_zh_male_bujiqingnian_tob",
-    "saturn_zh_male_chengshuzongcai_tob",
-    "saturn_zh_male_cixingnansang_tob",
-    "saturn_zh_male_cujingnanyou_tob",
-    "saturn_zh_male_fengfashaonian_tob",
-    "saturn_zh_male_fuheigongzi_tob",
-    "en_male_tim_uranus_bigtts",
-    "en_female_dacey_uranus_bigtts",
-    "en_female_stokie_uranus_bigtts",
-}
-
-
-def default_realtime_config() -> dict[str, Any]:
-    return {
-        "mode": "o2",
-        "botName": "ECHORURA",
-        "speaker": DEFAULT_O2_SPEAKER,
-        "systemRole": "你是 ECHORURA 的语音入口助手。先用简短中文自然对话，支持唱歌请求和联网搜索。",
-        "speakingStyle": "表达自然、简短、友好。优先一句话回答。",
-        "openingLine": "你好，我是 ECHORURA。我们先测试实时语音对话。",
-        "strictAudit": True,
-        "enableWebSearch": True,
-        "enableMusic": True,
-        "enableLoudnessNorm": False,
-        "enableConversationTruncate": True,
-        "enableUserQueryExit": True,
-        "speechRate": 0,
-        "loudnessRate": 0,
-    }
 
 
 def build_start_session_payload(raw_config: dict[str, Any] | None = None) -> dict[str, Any]:
