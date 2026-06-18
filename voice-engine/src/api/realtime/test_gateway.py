@@ -1,6 +1,6 @@
 import unittest
 
-from .gateway import _clean_display_text, _merge_asr_text
+from .gateway import _clean_display_text, _make_voice_turn_text_event, _merge_asr_text
 
 
 class AsrTextMergeTest(unittest.TestCase):
@@ -44,6 +44,26 @@ class DisplayTextCleanTest(unittest.TestCase):
         text = "Play the song Hello World"
 
         self.assertEqual(_clean_display_text(text), "Play the song Hello World")
+
+
+class VoiceTurnTextEventTest(unittest.TestCase):
+    def test_builds_standard_voice_turn_text_event(self) -> None:
+        event = _make_voice_turn_text_event(
+            session_id="session-1",
+            turn_id="turn-1",
+            role="user",
+            text="帮我做一首歌",
+            output_id="user-output-1",
+        )
+
+        self.assertEqual(event["type"], "voice_turn_text")
+        self.assertEqual(event["session_id"], "session-1")
+        self.assertEqual(event["turn_id"], "turn-1")
+        self.assertEqual(event["role"], "user")
+        self.assertEqual(event["text"], "帮我做一首歌")
+        self.assertEqual(event["source"], "doubao_s2s")
+        self.assertEqual(event["output_id"], "user-output-1")
+        self.assertRegex(event["at"], r"^\d{2}:\d{2}:\d{2}$")
 
 
 if __name__ == "__main__":

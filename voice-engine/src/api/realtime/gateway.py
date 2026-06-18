@@ -305,6 +305,15 @@ class RealtimeGateway:
         output_id = self.current_user_output_id or self._next_user_output_id()
         self.current_user_text = _merge_asr_text(self.current_user_text, clean_text)
         await self._send_json({"type": "event", "event": _make_event("user", self.current_user_text, output_id)})
+        await self._send_json(
+            _make_voice_turn_text_event(
+                session_id=self.session_id,
+                turn_id=output_id,
+                role="user",
+                text=self.current_user_text,
+                output_id=output_id,
+            )
+        )
 
     async def _handle_chat_response_content(self, content: str) -> None:
         text = _clean_display_text(content)
@@ -333,6 +342,15 @@ class RealtimeGateway:
         self.current_assistant_output_id = output_id
         self.current_assistant_text = text
         await self._send_json({"type": "event", "event": _make_event("assistant", text, output_id)})
+        await self._send_json(
+            _make_voice_turn_text_event(
+                session_id=self.session_id,
+                turn_id=output_id,
+                role="assistant",
+                text=text,
+                output_id=output_id,
+            )
+        )
 
     async def _send_json(self, payload: dict[str, Any]) -> None:
         try:
@@ -359,6 +377,19 @@ def _make_event(event_type: str, text: str, output_id: str | None = None) -> dic
     if output_id:
         event["outputId"] = output_id
     return event
+
+
+def _make_voice_turn_text_event(session_id: str, turn_id: str, role: str, text: str, output_id: str) -> dict[str, str]:
+    return {
+        "type": "voice_turn_text",
+        "session_id": session_id,
+        "turn_id": turn_id,
+        "role": role,
+        "text": text,
+        "source": "doubao_s2s",
+        "output_id": output_id,
+        "at": datetime.now().strftime("%H:%M:%S"),
+    }
 
 
 def _merge_stream_text(previous: str, next_text: str) -> str:
