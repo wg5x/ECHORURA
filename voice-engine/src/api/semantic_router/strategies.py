@@ -52,6 +52,10 @@ def _extract_arguments(capability: Capability, raw_text: str, normalized_text: s
         return _extract_sms_compose_arguments(raw_text)
     if capability.id == "native.app.open":
         return _extract_app_open_arguments(raw_text)
+    if capability.id == "native.app.search":
+        return _extract_app_search_arguments(raw_text)
+    if capability.id == "native.app.open_deep_link":
+        return _extract_app_deep_link_arguments(raw_text)
     if capability.id == "native.browser.open_url":
         return _extract_browser_open_url_arguments(raw_text)
     if capability.id == "native.gallery.pick_image":
@@ -60,6 +64,10 @@ def _extract_arguments(capability: Capability, raw_text: str, normalized_text: s
         return _extract_media_play_arguments(raw_text, normalized_text)
     if capability.id == "native.settings.open_wifi":
         return {"panel": "wifi"}
+    if capability.id == "native.camera.capture_photo":
+        return {"media_type": "image"}
+    if capability.id == "native.camera.capture_video":
+        return {"media_type": "video"}
     if capability.id == "music_creation.create_song":
         return _extract_create_song_arguments(raw_text, normalized_text)
     if capability.id == "music_creation.revise_song":
@@ -117,6 +125,31 @@ def _extract_app_open_arguments(raw_text: str) -> dict[str, str]:
         if _normalize_text(app_name) in normalized:
             return {"app_name": app_name, "package_name": package_name}
     return {}
+
+
+def _extract_app_search_arguments(raw_text: str) -> dict[str, str]:
+    apps = {
+        "淘宝": "https://s.taobao.com/search?q={query}",
+        "京东": "https://search.jd.com/Search?keyword={query}",
+    }
+    for app_name, url_template in apps.items():
+        match = re.search(fr"{app_name}搜索(.+)$", raw_text)
+        if match:
+            query = match.group(1).strip()
+            return {"app_name": app_name, "query": query, "fallback_url_template": url_template}
+    return {}
+
+
+def _extract_app_deep_link_arguments(raw_text: str) -> dict[str, str]:
+    match = re.search(r"发微信给(.+?)说(.+)$", raw_text)
+    if match:
+        return {
+            "app_name": "微信",
+            "contact_name": match.group(1).strip(),
+            "message_text": match.group(2).strip(),
+            "execution_hint": "requires_app_deep_link_or_accessibility",
+        }
+    return {"app_name": "微信", "execution_hint": "requires_app_deep_link_or_accessibility"}
 
 
 def _extract_browser_open_url_arguments(raw_text: str) -> dict[str, str]:

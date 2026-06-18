@@ -53,7 +53,7 @@ def default_capability_configs() -> list[CapabilityConfig]:
             id="native.calendar.create_event",
             mode="native_action",
             intent="calendar.create_event",
-            keywords=("开会", "会议", "日程", "记录", "提醒我"),
+            keywords=("开会", "会议", "日程", "记录", "提醒我", "今天", "明天", "后天", "上午", "下午", "晚上"),
             confidence=0.86,
             requires_confirmation=True,
             arguments={
@@ -88,6 +88,23 @@ def default_capability_configs() -> list[CapabilityConfig]:
             arguments={"android_action": "android.intent.action.VIEW"},
         ),
         CapabilityConfig(
+            id="native.app.search",
+            mode="native_action",
+            intent="app.search",
+            keywords=("打开淘宝搜索", "淘宝搜索", "打开京东搜索", "京东搜索"),
+            confidence=0.84,
+            arguments={"android_action": "android.intent.action.VIEW"},
+        ),
+        CapabilityConfig(
+            id="native.app.open_deep_link",
+            mode="native_action",
+            intent="app.open_deep_link",
+            keywords=("发微信给", "微信发给", "微信给"),
+            confidence=0.8,
+            requires_confirmation=True,
+            arguments={"android_launcher": "app_deep_link_or_accessibility"},
+        ),
+        CapabilityConfig(
             id="native.gallery.pick_image",
             mode="native_action",
             intent="gallery.pick_image",
@@ -115,6 +132,28 @@ def default_capability_configs() -> list[CapabilityConfig]:
             arguments={
                 "android_action": "android.settings.WIFI_SETTINGS",
                 "panel": "wifi",
+            },
+        ),
+        CapabilityConfig(
+            id="native.camera.capture_photo",
+            mode="native_action",
+            intent="camera.capture_photo",
+            keywords=("拍照", "拍张照片", "拍一张照片", "照相"),
+            confidence=0.88,
+            arguments={
+                "android_action": "android.media.action.IMAGE_CAPTURE",
+                "media_type": "image",
+            },
+        ),
+        CapabilityConfig(
+            id="native.camera.capture_video",
+            mode="native_action",
+            intent="camera.capture_video",
+            keywords=("录视频", "录个视频", "拍视频", "录像"),
+            confidence=0.88,
+            arguments={
+                "android_action": "android.media.action.VIDEO_CAPTURE",
+                "media_type": "video",
             },
         ),
         CapabilityConfig(

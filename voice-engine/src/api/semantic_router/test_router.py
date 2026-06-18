@@ -77,6 +77,19 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["arguments"]["time_text"], "今天下午三点")
         self.assertEqual(decision["arguments"]["android_action"], "android.intent.action.INSERT")
 
+    def test_phone_assistant_routes_calendar_event_without_calendar_keyword(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-1b",
+            "明天上午十点项目评审",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "calendar.create_event")
+        self.assertEqual(decision["arguments"]["title"], "项目评审")
+        self.assertEqual(decision["arguments"]["time_text"], "明天上午十点")
+
     def test_phone_assistant_routes_phone_dial(self) -> None:
         decision = self.router.route_text(
             "session-1",
@@ -112,6 +125,34 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["mode"], "native_action")
         self.assertEqual(decision["intent"], "app.open")
         self.assertEqual(decision["arguments"]["app_name"], "淘宝")
+
+    def test_phone_assistant_routes_app_search(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-4b",
+            "打开淘宝搜索耳机",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "app.search")
+        self.assertEqual(decision["arguments"]["app_name"], "淘宝")
+        self.assertEqual(decision["arguments"]["query"], "耳机")
+
+    def test_phone_assistant_routes_app_deep_link_message(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-4c",
+            "发微信给张三说我到了",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "app.open_deep_link")
+        self.assertTrue(decision["requires_confirmation"])
+        self.assertEqual(decision["arguments"]["app_name"], "微信")
+        self.assertEqual(decision["arguments"]["contact_name"], "张三")
+        self.assertEqual(decision["arguments"]["message_text"], "我到了")
 
     def test_phone_assistant_routes_browser_url(self) -> None:
         decision = self.router.route_text(
@@ -160,6 +201,30 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["mode"], "native_action")
         self.assertEqual(decision["intent"], "settings.open_wifi")
         self.assertEqual(decision["arguments"]["panel"], "wifi")
+
+    def test_phone_assistant_routes_camera_photo(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-9",
+            "拍张照片",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "camera.capture_photo")
+        self.assertEqual(decision["arguments"]["media_type"], "image")
+
+    def test_phone_assistant_routes_camera_video(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-10",
+            "录个视频",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "camera.capture_video")
+        self.assertEqual(decision["arguments"]["media_type"], "video")
 
     def test_decision_can_be_serialized_for_cli_output(self) -> None:
         decision = self.router.route_text("session-1", "turn-7", "打开作品页")
