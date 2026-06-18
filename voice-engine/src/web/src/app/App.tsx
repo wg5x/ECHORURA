@@ -128,7 +128,7 @@ export function App() {
       if (!micReady) {
         appendLog("system", "麦克风未开启，仍可使用文字输入测试 S2S。");
       }
-      ws.send(JSON.stringify({ type: "start", config: selectedProfile.config }));
+      ws.send(JSON.stringify({ type: "start", config: selectedProfile.config, agent_profile_id: selectedAgentProfileId }));
     };
 
     ws.onmessage = (message) => {

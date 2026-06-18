@@ -50,6 +50,7 @@ class RealtimeGateway:
         self.recorder: LocalSessionRecorder | None = None
         self.debug_logger: RealtimeDebugLogger | None = None
         self.semantic_router = SemanticRouter()
+        self.agent_profile_id = "default"
         self.session_started_at = 0.0
         self.first_output_audio_at = 0.0
 
@@ -92,6 +93,7 @@ class RealtimeGateway:
         if message.get("type") == "start":
             await self._cancel_tasks()
             await self._close_upstream()
+            self._set_agent_profile_from_message(message)
             if not has_volc_credentials():
                 await self._send_json({"type": "error", "message": "缺少 VOLC_API_APP_ID 或 VOLC_API_ACCESS_KEY。"})
                 await self._send_json({"type": "status", "status": "idle"})
@@ -175,7 +177,7 @@ class RealtimeGateway:
                     error_text = frame.payload.get("error") if isinstance(frame.payload, dict) else None
                     message = error_text or f"火山 API 返回错误：{frame.code}"
                     self._record_debug("error", {"message": message, "code": frame.code, "event": frame.event})
-                    await self._send_json({"type": "error", "message": message})
+                    await self._send_upstream_error(message)
                     continue
 
                 if frame.event == SERVER_EVENTS["CONNECTION_STARTED"]:
@@ -186,7 +188,7 @@ class RealtimeGateway:
                     error_text = frame.payload.get("error") if isinstance(frame.payload, dict) else None
                     message = error_text or "火山实时语音连接失败。"
                     self._record_debug("error", {"message": message, "code": frame.code, "event": frame.event})
-                    await self._send_json({"type": "error", "message": message})
+                    await self._send_upstream_error(message)
                     continue
 
                 if frame.event == SERVER_EVENTS["SESSION_STARTED"]:
@@ -273,6 +275,12 @@ class RealtimeGateway:
             return
         self.upstream_ready = True
         await upstream.send(make_json_frame(CLIENT_EVENTS["START_SESSION"], payload, self.session_id))
+
+    async def _send_upstream_error(self, message: str) -> None:
+        display_message = _normalize_upstream_error_message(message)
+        await self._send_json({"type": "error", "message": display_message})
+        if "DialogAudioIdleTimeoutError" in message:
+            await self._send_json({"type": "status", "status": "idle"})
 
     async def _delayed_send_session_start(self, upstream, payload: dict[str, Any]) -> None:
         await asyncio.sleep(0.6)
@@ -374,8 +382,13 @@ class RealtimeGateway:
                 turn_id=output_id,
                 text=self.current_user_text,
                 source="doubao_s2s",
+                agent_profile_id=self.agent_profile_id,
             )
         )
+
+    def _set_agent_profile_from_message(self, message: dict[str, Any]) -> None:
+        agent_profile_id = str(message.get("agent_profile_id") or "default").strip()
+        self.agent_profile_id = agent_profile_id or "default"
 
     async def _handle_chat_response_content(self, content: str) -> None:
         text = _clean_display_text(content)
@@ -613,6 +626,12 @@ def _clean_display_text(text: str) -> str:
     text = re.sub(r"(?<=[\u3400-\u9fff])\s+(?=[，。！？、；：])", "", text)
     text = re.sub(r"(?<=[，。！？、；：])\s+(?=[\u3400-\u9fff])", "", text)
     return text
+
+
+def _normalize_upstream_error_message(message: str) -> str:
+    if "DialogAudioIdleTimeoutError" in message:
+        return "实时语音会话已空闲超时。请重新开始通话后直接说话，或使用下方文本测试。"
+    return message
 
 
 def _normalize_text(text: str) -> str:

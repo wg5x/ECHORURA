@@ -116,6 +116,27 @@ class GatewayDebugLogTest(unittest.TestCase):
         self.assertEqual(decision["scenario_id"], "music_creation")
         self.assertEqual(decision["scenario_intent"], "create_song")
 
+    def test_user_asr_uses_selected_agent_profile_for_route_decision(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+        gateway.session_id = "session-1"
+        gateway.agent_profile_id = "phone-assistant"
+
+        asyncio.run(gateway._handle_user_asr_text("打开淘宝"))
+
+        decision = json.loads(client_ws.sent[3])
+        self.assertEqual(decision["agent_profile_id"], "phone-assistant")
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "app.open")
+
+    def test_start_message_stores_selected_agent_profile(self) -> None:
+        gateway = RealtimeGateway(_FakeClientWebSocket())
+        message = {"type": "start", "agent_profile_id": "phone-assistant"}
+
+        gateway._set_agent_profile_from_message(message)
+
+        self.assertEqual(gateway.agent_profile_id, "phone-assistant")
+
     def test_send_json_records_standardized_voice_turn_text(self) -> None:
         logger = _FakeDebugLogger()
         client_ws = _FakeClientWebSocket()
@@ -188,6 +209,17 @@ class GatewayDebugLogTest(unittest.TestCase):
         self.assertEqual(payload["session_id"], "session-1")
         self.assertEqual(payload["latency_ms"], 247)
         self.assertEqual(payload["payload_bytes"], 960)
+
+    def test_normalizes_dialog_audio_idle_timeout_error(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+
+        asyncio.run(gateway._send_upstream_error("sami error: codes=52000042, desc=DialogAudioIdleTimeoutError"))
+
+        messages = [json.loads(message) for message in client_ws.sent]
+        self.assertEqual(messages[0]["type"], "error")
+        self.assertEqual(messages[0]["message"], "实时语音会话已空闲超时。请重新开始通话后直接说话，或使用下方文本测试。")
+        self.assertEqual(messages[1], {"type": "status", "status": "idle"})
 
 
 class _FakeClientWebSocket:
