@@ -15,7 +15,7 @@ class VoiceProfileConfigTest(unittest.TestCase):
         profiles = default_voice_profile_configs()
         profile_ids = {profile.id for profile in profiles}
 
-        self.assertIn("echorura-default", profile_ids)
+        self.assertIn("default", profile_ids)
         self.assertIn("short-latency", profile_ids)
         self.assertIn("music-test", profile_ids)
 

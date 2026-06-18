@@ -73,8 +73,8 @@ def default_voice_profile_configs() -> list[VoiceProfileConfig]:
     default_config = default_realtime_config()
     return [
         VoiceProfileConfig(
-            id="echorura-default",
-            name="ECHORURA 默认语音",
+            id="default",
+            name="默认语音",
             description="自然、简短，保留联网和唱歌能力。",
             config={
                 **default_config,
