@@ -14,6 +14,9 @@ export default defineConfig({
       },
       "/semantic-router": {
         target: "http://127.0.0.1:8787"
+      },
+      "/actions": {
+        target: "http://127.0.0.1:8787"
       }
     }
   }

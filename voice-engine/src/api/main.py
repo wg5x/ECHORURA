@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
+from .action_executor import execute_mock_action
 from .config import has_volc_credentials, load_local_env
 from .realtime.gateway import RealtimeGateway
 from .semantic_router import SemanticRouter
@@ -42,6 +43,16 @@ async def decide_route(payload: dict[str, Any]):
         source="manual_text",
         agent_profile_id=agent_profile_id,
     )
+
+
+@app.post("/actions/mock-execute")
+async def mock_execute_action(payload: dict[str, Any]):
+    route_decision = await decide_route(payload)
+    return {
+        "type": "mock_action_execution",
+        "route_decision": route_decision,
+        "action_result": execute_mock_action(route_decision),
+    }
 
 
 @app.websocket("/realtime")

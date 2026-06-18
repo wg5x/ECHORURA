@@ -29,6 +29,23 @@ type RouteDecision = {
   arguments?: Record<string, unknown>;
 };
 
+type ActionResult = {
+  type: "action_result";
+  result_type: string;
+  status: string;
+  summary: string;
+  intent: string;
+  requires_confirmation?: boolean;
+  requires_native_bridge?: boolean;
+  arguments?: Record<string, unknown>;
+};
+
+type MockActionExecution = {
+  type: "mock_action_execution";
+  route_decision: RouteDecision;
+  action_result: ActionResult;
+};
+
 type LogItem = {
   id: string;
   role: string;
@@ -69,6 +86,7 @@ export function App() {
   const [selectedAgentProfileId, setSelectedAgentProfileId] = useState("phone-assistant");
   const [routerText, setRouterText] = useState("帮我打开作品页");
   const [routerResult, setRouterResult] = useState<RouteDecision | null>(null);
+  const [actionResult, setActionResult] = useState<ActionResult | null>(null);
   const [routerError, setRouterError] = useState("");
   const [routerLoading, setRouterLoading] = useState(false);
   const selectedProfile = findVoiceProfile(selectedProfileId);
@@ -160,9 +178,10 @@ export function App() {
 
     setRouterLoading(true);
     setRouterError("");
+    setActionResult(null);
 
     try {
-      const response = await fetch("/semantic-router/decide", {
+      const response = await fetch("/actions/mock-execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,8 +194,9 @@ export function App() {
       if (!response.ok) {
         throw new Error(`Router API ${response.status}`);
       }
-      const decision = (await response.json()) as RouteDecision;
-      setRouterResult(decision);
+      const execution = (await response.json()) as MockActionExecution;
+      setRouterResult(execution.route_decision);
+      setActionResult(execution.action_result);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Router 请求失败。";
       setRouterError(message);
@@ -444,7 +464,7 @@ export function App() {
             placeholder="输入文本测试意图"
           />
           <button type="button" onClick={() => void testRouter()} disabled={routerLoading || !routerText.trim()}>
-            {routerLoading ? "识别中" : "识别意图"}
+            {routerLoading ? "模拟中" : "识别并模拟"}
           </button>
         </div>
         {routerError ? <p className="router-error">{routerError}</p> : null}
@@ -468,7 +488,19 @@ export function App() {
                 <dd>{routerResult.requires_confirmation ? "true" : "false"}</dd>
               </div>
             </dl>
-            <pre className="router-json">{JSON.stringify(routerResult, null, 2)}</pre>
+            {actionResult ? (
+              <div className="action-result">
+                <strong>{actionResult.summary}</strong>
+                <span>
+                  {actionResult.status} · {actionResult.result_type}
+                  {actionResult.requires_native_bridge ? " · requires Native Bridge" : ""}
+                </span>
+              </div>
+            ) : null}
+            <div className="router-json-grid">
+              <pre className="router-json">{JSON.stringify(routerResult, null, 2)}</pre>
+              {actionResult ? <pre className="router-json">{JSON.stringify(actionResult, null, 2)}</pre> : null}
+            </div>
           </>
         ) : null}
       </section>

@@ -219,6 +219,28 @@ button:disabled {
   font-weight: 700;
 }
 
+.action-result {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  border: 1px solid #c8d9ce;
+  border-radius: 6px;
+  background: #eef8f1;
+  padding: 12px;
+}
+
+.action-result span {
+  color: #4d6656;
+  overflow-wrap: anywhere;
+}
+
+.router-json-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .router-json {
   overflow: auto;
   max-height: 320px;
@@ -356,6 +378,14 @@ button:disabled {
   }
 
   .router-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .action-result {
+    flex-direction: column;
+  }
+
+  .router-json-grid {
     grid-template-columns: 1fr;
   }
 }
