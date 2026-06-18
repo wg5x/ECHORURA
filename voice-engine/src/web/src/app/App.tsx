@@ -359,7 +359,7 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <h1>ECHORURA Voice Engine</h1>
+          <h1>Voice Engine</h1>
           <p>FastAPI + React + 火山端到端实时语音 S2S</p>
         </div>
         <div className={`status status-${status}`}>{status}</div>

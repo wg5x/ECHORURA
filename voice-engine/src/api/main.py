@@ -12,7 +12,7 @@ from .semantic_router import SemanticRouter
 
 load_local_env()
 
-app = FastAPI(title="ECHORURA Voice Engine S2S API")
+app = FastAPI(title="Voice Engine S2S API")
 semantic_router = SemanticRouter()
 
 app.add_middleware(

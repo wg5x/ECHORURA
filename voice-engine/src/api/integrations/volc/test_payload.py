@@ -12,7 +12,7 @@ class StartSessionPayloadTest(unittest.TestCase):
 
         self.assertEqual(result["config"]["mode"], "o2")
         self.assertEqual(result["payload"]["tts"]["speaker"], DEFAULT_O2_SPEAKER)
-        self.assertEqual(result["payload"]["dialog"]["bot_name"], "ECHORURA")
+        self.assertEqual(result["payload"]["dialog"]["bot_name"], "语音助手")
         self.assertEqual(result["warnings"], [])
 
     def test_warns_when_websearch_is_enabled_without_key(self) -> None:

@@ -1,4 +1,4 @@
-# ECHORURA Voice Engine S2S
+# Voice Engine S2S
 
 目标：用 FastAPI + React 直接跑通火山/豆包端到端实时语音 S2S。
 

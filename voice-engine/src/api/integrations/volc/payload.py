@@ -131,7 +131,7 @@ def _normalize_config(raw: dict[str, Any]) -> dict[str, Any]:
         "mode": mode,
         "model": "1.2.1.1" if mode == "o2" else "2.2.0.0",
         "speaker": speaker,
-        "botName": to_string_value(raw.get("botName"), "ECHORURA")[:20],
+        "botName": to_string_value(raw.get("botName"), "语音助手")[:20],
         "systemRole": to_string_value(raw.get("systemRole")),
         "speakingStyle": to_string_value(raw.get("speakingStyle")),
         "characterManifest": to_string_value(raw.get("characterManifest")),

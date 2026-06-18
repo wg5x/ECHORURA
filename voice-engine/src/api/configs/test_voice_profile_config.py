@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 from .voice_profile_config import (
     DEFAULT_O2_SPEAKER,
@@ -8,6 +9,19 @@ from .voice_profile_config import (
     default_realtime_config,
     default_voice_profile_configs,
 )
+
+
+FORBIDDEN_BRAND = "echo" + "rura"
+
+
+def _string_values(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [entry for item in value.values() for entry in _string_values(item)]
+    if isinstance(value, (list, tuple)):
+        return [entry for item in value for entry in _string_values(item)]
+    return []
 
 
 class VoiceProfileConfigTest(unittest.TestCase):
@@ -34,9 +48,19 @@ class VoiceProfileConfigTest(unittest.TestCase):
 
         self.assertEqual(config["mode"], "o2")
         self.assertEqual(config["speaker"], DEFAULT_O2_SPEAKER)
-        self.assertEqual(config["botName"], "ECHORURA")
+        self.assertEqual(config["botName"], "语音助手")
         self.assertTrue(config["enableWebSearch"])
         self.assertTrue(config["enableMusic"])
+
+    def test_default_voice_profiles_do_not_use_project_brand_name(self) -> None:
+        values = _string_values(default_realtime_config())
+        for profile in default_voice_profile_configs():
+            values.extend(_string_values(profile.id))
+            values.extend(_string_values(profile.name))
+            values.extend(_string_values(profile.description))
+            values.extend(_string_values(profile.config))
+
+        self.assertTrue(all(FORBIDDEN_BRAND not in value.lower() for value in values))
 
 
 if __name__ == "__main__":
