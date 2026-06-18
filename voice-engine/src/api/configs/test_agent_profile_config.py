@@ -42,7 +42,21 @@ class AgentProfileConfigTest(unittest.TestCase):
         profiles = {profile.id: profile for profile in default_agent_profile_configs()}
 
         self.assertEqual(profiles["phone-assistant"].voice_profile_id, "short-latency")
-        self.assertEqual(profiles["phone-assistant"].enabled_capability_ids, ("native.open_page", "chat.general"))
+        self.assertEqual(
+            profiles["phone-assistant"].enabled_capability_ids,
+            (
+                "native.open_page",
+                "native.calendar.create_event",
+                "native.phone.dial",
+                "native.sms.compose",
+                "native.app.open",
+                "native.browser.open_url",
+                "native.gallery.pick_image",
+                "native.media.play_from_search",
+                "native.settings.open_wifi",
+                "chat.general",
+            ),
+        )
 
 
 if __name__ == "__main__":

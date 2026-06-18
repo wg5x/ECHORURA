@@ -169,6 +169,15 @@ button:disabled {
   gap: 12px;
 }
 
+.router-form select {
+  width: 160px;
+  height: 40px;
+  border: 1px solid #b9c0c6;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+}
+
 .router-form input {
   min-width: 0;
   flex: 1;
@@ -322,6 +331,7 @@ button:disabled {
 
   .text-input input,
   .router-form input,
+  .router-form select,
   .profile-panel select,
   button {
     width: 100%;

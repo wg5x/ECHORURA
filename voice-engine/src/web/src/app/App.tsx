@@ -18,6 +18,7 @@ type RouteDecision = {
   type: "route_decision";
   session_id: string;
   turn_id: string;
+  agent_profile_id?: string;
   mode: string;
   intent?: string;
   scenario_id?: string;
@@ -52,6 +53,11 @@ const emptyMetrics: Metrics = {
   lastError: ""
 };
 
+const AGENT_PROFILE_OPTIONS = [
+  { id: "default", name: "默认助手" },
+  { id: "phone-assistant", name: "手机助理" }
+];
+
 export function App() {
   const [status, setStatus] = useState<Status>("idle");
   const [logs, setLogs] = useState<LogItem[]>([]);
@@ -60,6 +66,7 @@ export function App() {
   const [health, setHealth] = useState("unchecked");
   const [metrics, setMetrics] = useState<Metrics>(emptyMetrics);
   const [selectedProfileId, setSelectedProfileId] = useState(DEFAULT_VOICE_PROFILE.id);
+  const [selectedAgentProfileId, setSelectedAgentProfileId] = useState("phone-assistant");
   const [routerText, setRouterText] = useState("帮我打开作品页");
   const [routerResult, setRouterResult] = useState<RouteDecision | null>(null);
   const [routerError, setRouterError] = useState("");
@@ -161,7 +168,8 @@ export function App() {
         body: JSON.stringify({
           text,
           session_id: "frontend-debug",
-          turn_id: `router-${Date.now()}`
+          turn_id: `router-${Date.now()}`,
+          agent_profile_id: selectedAgentProfileId
         })
       });
       if (!response.ok) {
@@ -416,6 +424,17 @@ export function App() {
           <span>{routerResult ? `${routerResult.mode}.${routerResult.scenario_intent || routerResult.intent}` : "ready"}</span>
         </div>
         <div className="router-form">
+          <select
+            value={selectedAgentProfileId}
+            onChange={(event) => setSelectedAgentProfileId(event.target.value)}
+            aria-label="Agent Profile"
+          >
+            {AGENT_PROFILE_OPTIONS.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
           <input
             value={routerText}
             onChange={(event) => setRouterText(event.target.value)}

@@ -14,6 +14,7 @@ class RouteInput:
     turn_id: str
     text: str
     source: str = "manual_text"
+    agent_profile_id: str = "default"
 
 
 @dataclass(frozen=True)
