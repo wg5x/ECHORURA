@@ -11,3 +11,4 @@ __pycache__/
 *.py[cod]
 *.tsbuildinfo
 voice-engine/src/data/recordings/
+voice-engine/src/data/debug-events/

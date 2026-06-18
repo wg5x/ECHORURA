@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import re
+import time
 import unicodedata
 import uuid
 from datetime import datetime
@@ -12,10 +13,19 @@ from typing import Any
 import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 
-from ..config import get_recordings_dir, get_volc_headers, get_volc_ws_url, has_volc_credentials, is_voice_recording_enabled
+from ..config import (
+    get_debug_events_dir,
+    get_recordings_dir,
+    get_volc_headers,
+    get_volc_ws_url,
+    has_volc_credentials,
+    is_realtime_debug_log_enabled,
+    is_voice_recording_enabled,
+)
 from ..integrations.volc.events import CLIENT_EVENTS, SERVER_EVENTS
-from ..integrations.volc.frames import make_audio_frame, make_json_frame, parse_server_frame
+from ..integrations.volc.frames import ServerFrame, make_audio_frame, make_json_frame, parse_server_frame
 from ..integrations.volc.payload import build_start_session_payload, redact_payload
+from .debug_log import RealtimeDebugLogger
 from .recording import LocalSessionRecorder
 
 
@@ -37,6 +47,9 @@ class RealtimeGateway:
         self.current_user_output_id = ""
         self.current_user_text = ""
         self.recorder: LocalSessionRecorder | None = None
+        self.debug_logger: RealtimeDebugLogger | None = None
+        self.session_started_at = 0.0
+        self.first_output_audio_at = 0.0
 
     async def run(self) -> None:
         await self.client_ws.accept()
@@ -120,7 +133,19 @@ class RealtimeGateway:
         self.current_user_output_id = ""
         self.current_user_text = ""
         self._close_recorder()
+        self.debug_logger = RealtimeDebugLogger(is_realtime_debug_log_enabled(), get_debug_events_dir(), self.session_id)
+        self.session_started_at = time.monotonic()
+        self.first_output_audio_at = 0.0
         self.recorder = LocalSessionRecorder(is_voice_recording_enabled(), get_recordings_dir(), self.session_id)
+        self._record_debug(
+            "start_session",
+            {
+                "session_id": self.session_id,
+                "payload": redact_payload(payload),
+                "warnings": warnings,
+                "config": session["config"],
+            },
+        )
 
         await self._send_json({"type": "payload", "payload": redact_payload(payload), "warnings": warnings})
         await self._send_json({"type": "status", "status": "connecting", "warnings": warnings})
@@ -142,10 +167,13 @@ class RealtimeGateway:
                 frame = parse_server_frame(data)
                 if not frame:
                     continue
+                self._record_debug("upstream_frame", _make_upstream_debug_payload(frame))
 
                 if frame.message_type == 0x0F:
                     error_text = frame.payload.get("error") if isinstance(frame.payload, dict) else None
-                    await self._send_json({"type": "error", "message": error_text or f"火山 API 返回错误：{frame.code}"})
+                    message = error_text or f"火山 API 返回错误：{frame.code}"
+                    self._record_debug("error", {"message": message, "code": frame.code, "event": frame.event})
+                    await self._send_json({"type": "error", "message": message})
                     continue
 
                 if frame.event == SERVER_EVENTS["CONNECTION_STARTED"]:
@@ -154,7 +182,9 @@ class RealtimeGateway:
 
                 if frame.event in (SERVER_EVENTS["CONNECTION_FAILED"], SERVER_EVENTS["SESSION_FAILED"]):
                     error_text = frame.payload.get("error") if isinstance(frame.payload, dict) else None
-                    await self._send_json({"type": "error", "message": error_text or "火山实时语音连接失败。"})
+                    message = error_text or "火山实时语音连接失败。"
+                    self._record_debug("error", {"message": message, "code": frame.code, "event": frame.event})
+                    await self._send_json({"type": "error", "message": message})
                     continue
 
                 if frame.event == SERVER_EVENTS["SESSION_STARTED"]:
@@ -188,6 +218,17 @@ class RealtimeGateway:
                 if frame.event == SERVER_EVENTS["TTS_RESPONSE"] and isinstance(frame.payload, bytes):
                     if self.recorder:
                         self.recorder.write_output(frame.payload)
+                    if not self.first_output_audio_at:
+                        self.first_output_audio_at = time.monotonic()
+                        self._record_debug(
+                            "audio_latency",
+                            _make_audio_latency_debug_payload(
+                                session_id=self.session_id,
+                                session_started_at=self.session_started_at,
+                                first_audio_at=self.first_output_audio_at,
+                                payload_bytes=len(frame.payload),
+                            ),
+                        )
                     await self._send_json(
                         {
                             "type": "audio",
@@ -215,7 +256,9 @@ class RealtimeGateway:
             raise
         except Exception as exc:
             if not self.closing_upstream:
-                await self._send_json({"type": "error", "message": f"火山实时语音连接已中断：{exc}"})
+                message = f"火山实时语音连接已中断：{exc}"
+                self._record_debug("error", {"message": message})
+                await self._send_json({"type": "error", "message": message})
                 await self._send_json({"type": "status", "status": "idle", "warnings": warnings})
         finally:
             if self.upstream is upstream:
@@ -314,6 +357,15 @@ class RealtimeGateway:
                 output_id=output_id,
             )
         )
+        await self._send_json(
+            _make_transcript_event(
+                session_id=self.session_id,
+                turn_id=output_id,
+                role="user",
+                text=self.current_user_text,
+                output_id=output_id,
+            )
+        )
 
     async def _handle_chat_response_content(self, content: str) -> None:
         text = _clean_display_text(content)
@@ -351,12 +403,55 @@ class RealtimeGateway:
                 output_id=output_id,
             )
         )
+        await self._send_json(
+            _make_transcript_event(
+                session_id=self.session_id,
+                turn_id=output_id,
+                role="assistant",
+                text=text,
+                output_id=output_id,
+            )
+        )
 
     async def _send_json(self, payload: dict[str, Any]) -> None:
         try:
             await self.client_ws.send_text(json.dumps(payload, ensure_ascii=False))
+            self._record_client_debug(payload)
         except Exception:
             pass
+
+    def _record_client_debug(self, payload: dict[str, Any]) -> None:
+        payload_type = payload.get("type")
+        if payload_type == "voice_turn_text":
+            self._record_debug(
+                "voice_turn_text",
+                {
+                    "role": payload.get("role"),
+                    "text": payload.get("text"),
+                    "turn_id": payload.get("turn_id"),
+                },
+            )
+            return
+        if payload_type == "transcript_event":
+            self._record_debug(
+                "transcript_event",
+                {
+                    "role": payload.get("role"),
+                    "text": payload.get("text"),
+                    "turn_id": payload.get("turn_id"),
+                },
+            )
+            return
+        if payload_type == "status":
+            self._record_debug("status", {"status": payload.get("status"), "warnings": payload.get("warnings")})
+            return
+        if payload_type == "error":
+            self._record_debug("error", {"message": payload.get("message")})
+            return
+
+    def _record_debug(self, kind: str, payload: dict[str, Any]) -> None:
+        if self.debug_logger:
+            self.debug_logger.record(kind, payload)
 
 
 def _extract_asr_text(payload: dict[str, Any]) -> str:
@@ -389,6 +484,47 @@ def _make_voice_turn_text_event(session_id: str, turn_id: str, role: str, text: 
         "source": "doubao_s2s",
         "output_id": output_id,
         "at": datetime.now().strftime("%H:%M:%S"),
+    }
+
+
+def _make_transcript_event(session_id: str, turn_id: str, role: str, text: str, output_id: str) -> dict[str, str]:
+    return {
+        "type": "transcript_event",
+        "session_id": session_id,
+        "turn_id": turn_id,
+        "role": role,
+        "text": text,
+        "source": "doubao_s2s",
+        "output_id": output_id,
+        "at": datetime.now().strftime("%H:%M:%S"),
+    }
+
+
+def _make_upstream_debug_payload(frame: ServerFrame) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "event": frame.event,
+        "code": frame.code,
+        "message_type": frame.message_type,
+        "session_id": frame.session_id,
+    }
+    if isinstance(frame.payload, bytes):
+        payload["payload_bytes"] = len(frame.payload)
+    else:
+        payload["payload"] = frame.payload
+    return payload
+
+
+def _make_audio_latency_debug_payload(
+    session_id: str,
+    session_started_at: float,
+    first_audio_at: float,
+    payload_bytes: int,
+) -> dict[str, Any]:
+    latency_ms = int(round((first_audio_at - session_started_at) * 1000)) if session_started_at else 0
+    return {
+        "session_id": session_id,
+        "latency_ms": max(0, latency_ms),
+        "payload_bytes": payload_bytes,
     }
 
 

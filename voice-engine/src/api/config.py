@@ -14,6 +14,7 @@ DEFAULT_VOLC_WS_URL = "wss://openspeech.bytedance.com/api/v3/realtime/dialogue"
 DEFAULT_VOLC_RESOURCE_ID = "volc.speech.dialog"
 PUBLIC_APP_KEY = "PlgvMymc7f3tQnJ6"
 DEFAULT_RECORDINGS_DIR = SRC_DIR / "data" / "recordings"
+DEFAULT_DEBUG_EVENTS_DIR = SRC_DIR / "data" / "debug-events"
 
 ENV_FILES = (
     SRC_DIR / ".env.local",
@@ -67,4 +68,13 @@ def is_voice_recording_enabled() -> bool:
 
 def get_recordings_dir() -> Path:
     configured_dir = Path(os.environ.get("VOICE_RECORDINGS_DIR") or DEFAULT_RECORDINGS_DIR)
+    return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir
+
+
+def is_realtime_debug_log_enabled() -> bool:
+    return os.environ.get("VOICE_DEBUG_LOG_ENABLED", "").lower() == "true"
+
+
+def get_debug_events_dir() -> Path:
+    configured_dir = Path(os.environ.get("VOICE_DEBUG_LOG_DIR") or DEFAULT_DEBUG_EVENTS_DIR)
     return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir
