@@ -86,7 +86,7 @@ def build_start_session_payload(raw_config: dict[str, Any] | None = None) -> dic
             "enable_volc_websearch": config["enableWebSearch"],
             "volc_websearch_api_key": os.environ.get("VOLC_WEBSEARCH_API_KEY") if config["enableWebSearch"] else None,
             "input_mod": None,
-            "enable_music": config["enableMusic"],
+            "enable_music": True if config["enableMusic"] else None,
             "enable_loudness_norm": config["enableLoudnessNorm"],
             "enable_conversation_truncate": config["enableConversationTruncate"],
             "enable_user_query_exit": config["enableUserQueryExit"],
