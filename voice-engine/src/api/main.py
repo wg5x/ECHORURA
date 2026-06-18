@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import has_volc_credentials, load_local_env
 from .realtime.gateway import RealtimeGateway
+from .semantic_router import SemanticRouter
 
 
 load_local_env()
 
 app = FastAPI(title="ECHORURA Voice Engine S2S API")
+semantic_router = SemanticRouter()
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +27,14 @@ app.add_middleware(
 @app.get("/health")
 async def health():
     return {"ok": True, "volcConfigured": has_volc_credentials()}
+
+
+@app.post("/semantic-router/decide")
+async def decide_route(payload: dict[str, Any]):
+    text = str(payload.get("text") or "").strip()
+    session_id = str(payload.get("session_id") or "debug-session")
+    turn_id = str(payload.get("turn_id") or "turn-1")
+    return semantic_router.route_text(session_id=session_id, turn_id=turn_id, text=text, source="manual_text")
 
 
 @app.websocket("/realtime")

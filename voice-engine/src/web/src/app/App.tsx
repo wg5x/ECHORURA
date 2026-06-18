@@ -9,9 +9,24 @@ type ServerEvent =
   | { type: "status"; status: Status; warnings?: string[] }
   | { type: "payload"; payload: unknown; warnings?: string[] }
   | { type: "event"; event: { id: string; type: "user" | "assistant"; text: string; at: string; outputId?: string } }
+  | RouteDecision
   | { type: "audio"; data: string; mime: string; outputId?: string }
   | { type: "usage"; usage: Record<string, unknown> }
   | { type: "error"; message: string };
+
+type RouteDecision = {
+  type: "route_decision";
+  session_id: string;
+  turn_id: string;
+  mode: string;
+  intent?: string;
+  scenario_id?: string;
+  scenario_intent?: string;
+  confidence: number;
+  need_clarification?: boolean;
+  requires_confirmation?: boolean;
+  arguments?: Record<string, unknown>;
+};
 
 type LogItem = {
   id: string;
@@ -45,6 +60,10 @@ export function App() {
   const [health, setHealth] = useState("unchecked");
   const [metrics, setMetrics] = useState<Metrics>(emptyMetrics);
   const [selectedProfileId, setSelectedProfileId] = useState(DEFAULT_VOICE_PROFILE.id);
+  const [routerText, setRouterText] = useState("帮我打开作品页");
+  const [routerResult, setRouterResult] = useState<RouteDecision | null>(null);
+  const [routerError, setRouterError] = useState("");
+  const [routerLoading, setRouterLoading] = useState(false);
   const selectedProfile = findVoiceProfile(selectedProfileId);
   const socketRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -128,6 +147,36 @@ export function App() {
     appendLog("user", text);
   }
 
+  async function testRouter() {
+    const text = routerText.trim();
+    if (!text || routerLoading) return;
+
+    setRouterLoading(true);
+    setRouterError("");
+
+    try {
+      const response = await fetch("/semantic-router/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          session_id: "frontend-debug",
+          turn_id: `router-${Date.now()}`
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`Router API ${response.status}`);
+      }
+      const decision = (await response.json()) as RouteDecision;
+      setRouterResult(decision);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Router 请求失败。";
+      setRouterError(message);
+    } finally {
+      setRouterLoading(false);
+    }
+  }
+
   async function startMicrophone(ws: WebSocket) {
     if (!navigator.mediaDevices?.getUserMedia) return false;
 
@@ -197,6 +246,11 @@ export function App() {
     if (data.type === "event") {
       markTextEvent(data.event.type);
       appendLog(data.event.type, data.event.text, data.event.outputId);
+      return;
+    }
+
+    if (data.type === "route_decision") {
+      appendLog("route", `${data.mode}.${data.scenario_intent || data.intent || "unknown"}`, data.turn_id);
       return;
     }
 
@@ -354,6 +408,50 @@ export function App() {
         <button type="button" onClick={sendText} disabled={status !== "connected" || !textInput.trim()}>
           发送
         </button>
+      </section>
+
+      <section className="router-panel">
+        <div className="router-heading">
+          <h2>Semantic Router</h2>
+          <span>{routerResult ? `${routerResult.mode}.${routerResult.scenario_intent || routerResult.intent}` : "ready"}</span>
+        </div>
+        <div className="router-form">
+          <input
+            value={routerText}
+            onChange={(event) => setRouterText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void testRouter();
+            }}
+            placeholder="输入文本测试意图"
+          />
+          <button type="button" onClick={() => void testRouter()} disabled={routerLoading || !routerText.trim()}>
+            {routerLoading ? "识别中" : "识别意图"}
+          </button>
+        </div>
+        {routerError ? <p className="router-error">{routerError}</p> : null}
+        {routerResult ? (
+          <>
+            <dl className="router-summary">
+              <div>
+                <dt>mode</dt>
+                <dd>{routerResult.mode}</dd>
+              </div>
+              <div>
+                <dt>intent</dt>
+                <dd>{routerResult.scenario_intent || routerResult.intent || "-"}</dd>
+              </div>
+              <div>
+                <dt>confidence</dt>
+                <dd>{routerResult.confidence.toFixed(2)}</dd>
+              </div>
+              <div>
+                <dt>confirm</dt>
+                <dd>{routerResult.requires_confirmation ? "true" : "false"}</dd>
+              </div>
+            </dl>
+            <pre className="router-json">{JSON.stringify(routerResult, null, 2)}</pre>
+          </>
+        ) : null}
       </section>
 
       {warnings.length ? (

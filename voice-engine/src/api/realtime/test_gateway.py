@@ -106,11 +106,15 @@ class GatewayDebugLogTest(unittest.TestCase):
         asyncio.run(gateway._handle_user_asr_text("帮 我 做 一 首 歌"))
 
         sent_types = [json.loads(message)["type"] for message in client_ws.sent]
-        self.assertEqual(sent_types, ["event", "voice_turn_text", "transcript_event"])
+        self.assertEqual(sent_types, ["event", "voice_turn_text", "transcript_event", "route_decision"])
         transcript = json.loads(client_ws.sent[2])
         self.assertEqual(transcript["text"], "帮我做一首歌")
         self.assertEqual(transcript["role"], "user")
         self.assertEqual(transcript["source"], "doubao_s2s")
+        decision = json.loads(client_ws.sent[3])
+        self.assertEqual(decision["mode"], "scenario")
+        self.assertEqual(decision["scenario_id"], "music_creation")
+        self.assertEqual(decision["scenario_intent"], "create_song")
 
     def test_send_json_records_standardized_voice_turn_text(self) -> None:
         logger = _FakeDebugLogger()

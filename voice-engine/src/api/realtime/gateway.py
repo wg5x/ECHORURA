@@ -25,6 +25,7 @@ from ..config import (
 from ..integrations.volc.events import CLIENT_EVENTS, SERVER_EVENTS
 from ..integrations.volc.frames import ServerFrame, make_audio_frame, make_json_frame, parse_server_frame
 from ..integrations.volc.payload import build_start_session_payload, redact_payload
+from ..semantic_router import SemanticRouter
 from .debug_log import RealtimeDebugLogger
 from .recording import LocalSessionRecorder
 
@@ -48,6 +49,7 @@ class RealtimeGateway:
         self.current_user_text = ""
         self.recorder: LocalSessionRecorder | None = None
         self.debug_logger: RealtimeDebugLogger | None = None
+        self.semantic_router = SemanticRouter()
         self.session_started_at = 0.0
         self.first_output_audio_at = 0.0
 
@@ -366,6 +368,14 @@ class RealtimeGateway:
                 output_id=output_id,
             )
         )
+        await self._send_json(
+            self.semantic_router.route_text(
+                session_id=self.session_id,
+                turn_id=output_id,
+                text=self.current_user_text,
+                source="doubao_s2s",
+            )
+        )
 
     async def _handle_chat_response_content(self, content: str) -> None:
         text = _clean_display_text(content)
@@ -438,6 +448,18 @@ class RealtimeGateway:
                 {
                     "role": payload.get("role"),
                     "text": payload.get("text"),
+                    "turn_id": payload.get("turn_id"),
+                },
+            )
+            return
+        if payload_type == "route_decision":
+            self._record_debug(
+                "route_decision",
+                {
+                    "mode": payload.get("mode"),
+                    "intent": payload.get("intent"),
+                    "scenario_id": payload.get("scenario_id"),
+                    "scenario_intent": payload.get("scenario_intent"),
                     "turn_id": payload.get("turn_id"),
                 },
             )
