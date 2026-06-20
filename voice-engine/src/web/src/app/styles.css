@@ -116,6 +116,10 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.profile-welcome {
+  grid-column: 2 / -1;
+}
+
 .text-input input {
   min-width: 280px;
   flex: 1;
@@ -334,6 +338,85 @@ button:disabled {
   color: #b13b2e;
 }
 
+.log-message {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.log-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.intent-badge {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid #bad5d0;
+  border-radius: 999px;
+  background: #edf8f5;
+  color: #106b57;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
+.intent-popover {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  top: calc(100% + 8px);
+  display: none;
+  width: min(360px, 72vw);
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(23, 32, 38, 0.14);
+  color: #172026;
+  padding: 12px;
+  white-space: normal;
+}
+
+.intent-badge:hover .intent-popover,
+.intent-badge:focus .intent-popover {
+  display: block;
+}
+
+.intent-popover strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #172026;
+}
+
+.intent-popover dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.intent-popover dl > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.intent-popover dt {
+  color: #6e7780;
+}
+
+.intent-popover dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 18px;
@@ -363,9 +446,23 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .profile-welcome {
+    grid-column: auto;
+  }
+
   .log-item {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+
+  .log-message {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .intent-popover {
+    left: 0;
+    right: auto;
   }
 
   .metrics-panel dl {

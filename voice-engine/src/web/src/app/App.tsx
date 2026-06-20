@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { decodeBase64Pcm16, encodePcm16, resampleTo16k } from "../lib/audio";
 import { DEFAULT_VOICE_PROFILE, VOICE_PROFILES, findVoiceProfile } from "./voiceProfiles";
+import { attachRouteDecision, type LogItem, type RouteDecision } from "./logItems";
 import "./styles.css";
 
 type Status = "idle" | "connecting" | "connected" | "error";
@@ -13,21 +14,6 @@ type ServerEvent =
   | { type: "audio"; data: string; mime: string; outputId?: string }
   | { type: "usage"; usage: Record<string, unknown> }
   | { type: "error"; message: string };
-
-type RouteDecision = {
-  type: "route_decision";
-  session_id: string;
-  turn_id: string;
-  agent_profile_id?: string;
-  mode: string;
-  intent?: string;
-  scenario_id?: string;
-  scenario_intent?: string;
-  confidence: number;
-  need_clarification?: boolean;
-  requires_confirmation?: boolean;
-  arguments?: Record<string, unknown>;
-};
 
 type ActionResult = {
   type: "action_result";
@@ -44,14 +30,6 @@ type MockActionExecution = {
   type: "mock_action_execution";
   route_decision: RouteDecision;
   action_result: ActionResult;
-};
-
-type LogItem = {
-  id: string;
-  role: string;
-  text: string;
-  at: string;
-  outputId?: string;
 };
 
 type Metrics = {
@@ -71,8 +49,18 @@ const emptyMetrics: Metrics = {
 };
 
 const AGENT_PROFILE_OPTIONS = [
-  { id: "default", name: "默认助手" },
-  { id: "phone-assistant", name: "手机助理" }
+  {
+    id: "default",
+    name: "默认助手",
+    description: "通用语音入口，适合聊天、音乐和基础意图识别。",
+    openingLine: "你好，我是语音助手。你可以和我语音对话，也可以让我唱歌或联网搜索。"
+  },
+  {
+    id: "phone-assistant",
+    name: "手机助理",
+    description: "面向手机操作的工具型助手，优先识别系统 Intent。",
+    openingLine: "你好，我是手机助理。你可以直接说打电话、发短信、打开 App 或记录日程。"
+  }
 ];
 
 export function App() {
@@ -90,6 +78,10 @@ export function App() {
   const [routerError, setRouterError] = useState("");
   const [routerLoading, setRouterLoading] = useState(false);
   const selectedProfile = findVoiceProfile(selectedProfileId);
+  const selectedAgentProfile =
+    AGENT_PROFILE_OPTIONS.find((profile) => profile.id === selectedAgentProfileId) ?? AGENT_PROFILE_OPTIONS[0];
+  const openingLine =
+    selectedAgentProfileId === "phone-assistant" ? selectedAgentProfile.openingLine : selectedProfile.config.openingLine;
   const socketRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const inputContextRef = useRef<AudioContext | null>(null);
@@ -128,7 +120,16 @@ export function App() {
       if (!micReady) {
         appendLog("system", "麦克风未开启，仍可使用文字输入测试 S2S。");
       }
-      ws.send(JSON.stringify({ type: "start", config: selectedProfile.config, agent_profile_id: selectedAgentProfileId }));
+      ws.send(
+        JSON.stringify({
+          type: "start",
+          config: {
+            ...selectedProfile.config,
+            openingLine
+          },
+          agent_profile_id: selectedAgentProfileId
+        })
+      );
     };
 
     ws.onmessage = (message) => {
@@ -278,7 +279,7 @@ export function App() {
     }
 
     if (data.type === "route_decision") {
-      appendLog("route", `${data.mode}.${data.scenario_intent || data.intent || "unknown"}`, data.turn_id);
+      setLogs((items) => attachRouteDecision(items, data));
       return;
     }
 
@@ -338,6 +339,7 @@ export function App() {
           role,
           text,
           outputId,
+          turnId: outputId,
           at: new Date().toLocaleTimeString("zh-CN", { hour12: false })
         },
         ...items
@@ -422,6 +424,7 @@ export function App() {
         </select>
         <span>{selectedProfile.description}</span>
         <span>speaker: {selectedProfile.config.speaker}</span>
+        <span className="profile-welcome">欢迎词: {openingLine}</span>
       </section>
 
       <section className="text-input">
@@ -550,7 +553,52 @@ export function App() {
             <li key={item.id} className={`log-item log-${item.role}`}>
               <time>{item.at}</time>
               <strong>{item.role}</strong>
-              <span>{item.text}</span>
+              <div className="log-message">
+                <span className="log-text">{item.text}</span>
+                {item.routeDecision ? (
+                  <span
+                    className="intent-badge"
+                    tabIndex={0}
+                    title={[
+                      `mode: ${item.routeDecision.mode}`,
+                      `intent: ${item.routeDecision.scenario_intent || item.routeDecision.intent || "unknown"}`,
+                      `confidence: ${item.routeDecision.confidence.toFixed(2)}`,
+                      `confirm: ${item.routeDecision.requires_confirmation ? "true" : "false"}`
+                    ].join("\n")}
+                  >
+                    intent
+                    <span className="intent-popover" aria-hidden="true">
+                      <strong>Route Decision</strong>
+                      <dl>
+                        <div>
+                          <dt>mode</dt>
+                          <dd>{item.routeDecision.mode}</dd>
+                        </div>
+                        <div>
+                          <dt>intent</dt>
+                          <dd>{item.routeDecision.scenario_intent || item.routeDecision.intent || "-"}</dd>
+                        </div>
+                        <div>
+                          <dt>agent</dt>
+                          <dd>{item.routeDecision.agent_profile_id || "-"}</dd>
+                        </div>
+                        <div>
+                          <dt>confidence</dt>
+                          <dd>{item.routeDecision.confidence.toFixed(2)}</dd>
+                        </div>
+                        <div>
+                          <dt>confirm</dt>
+                          <dd>{item.routeDecision.requires_confirmation ? "true" : "false"}</dd>
+                        </div>
+                        <div>
+                          <dt>args</dt>
+                          <dd>{item.routeDecision.arguments ? JSON.stringify(item.routeDecision.arguments) : "-"}</dd>
+                        </div>
+                      </dl>
+                    </span>
+                  </span>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

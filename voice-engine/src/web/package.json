@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
+    "test": "tsc --outDir /tmp/voice-engine-web-tests --module NodeNext --moduleResolution NodeNext --target ES2022 src/app/logItems.test.ts && node /tmp/voice-engine-web-tests/logItems.test.js",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5173"
   },
