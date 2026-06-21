@@ -76,8 +76,10 @@ def run_memory_eval(
     model_memories = model_memories or {}
     records: list[dict[str, Any]] = []
     rule_passed = 0
+    rule_normalized_passed = 0
     model_evaluated = 0
     model_passed = 0
+    model_normalized_passed = 0
     disagreements = 0
 
     for case in cases:
@@ -88,20 +90,31 @@ def run_memory_eval(
         )
         rule_contents = _memory_contents(rule_memories)
         expected_contents = list(case.expected_contents)
+        expected_normalized_contents = _normalize_contents(expected_contents)
+        rule_normalized_contents = _normalize_contents(rule_contents)
         rule_pass = rule_contents == expected_contents
+        rule_normalized_pass = _contents_match(rule_normalized_contents, expected_normalized_contents)
         if rule_pass:
             rule_passed += 1
+        if rule_normalized_pass:
+            rule_normalized_passed += 1
 
         imported_model_memories = model_memories.get(case.id)
         model_contents: list[str] | None = None
+        model_normalized_contents: list[str] | None = None
         model_pass: bool | None = None
+        model_normalized_pass: bool | None = None
         rule_model_diff: list[dict[str, Any]] = []
         if imported_model_memories is not None:
             model_evaluated += 1
             model_contents = _memory_contents(imported_model_memories)
+            model_normalized_contents = _normalize_contents(model_contents)
             model_pass = model_contents == expected_contents
+            model_normalized_pass = _contents_match(model_normalized_contents, expected_normalized_contents)
             if model_pass:
                 model_passed += 1
+            if model_normalized_pass:
+                model_normalized_passed += 1
             rule_model_diff = _diff_contents(rule_contents, model_contents)
             if rule_model_diff:
                 disagreements += 1
@@ -115,10 +128,14 @@ def run_memory_eval(
                 "expected_contents": expected_contents,
                 "rule_memories": _project_memories(rule_memories),
                 "rule_contents": rule_contents,
+                "rule_normalized_contents": rule_normalized_contents,
                 "rule_pass": rule_pass,
+                "rule_normalized_pass": rule_normalized_pass,
                 "model_memories": _project_memories(imported_model_memories) if imported_model_memories is not None else None,
                 "model_contents": model_contents,
+                "model_normalized_contents": model_normalized_contents,
                 "model_pass": model_pass,
+                "model_normalized_pass": model_normalized_pass,
                 "rule_model_diff": rule_model_diff,
             }
         )
@@ -133,11 +150,23 @@ def run_memory_eval(
                 "failed": case_count - rule_passed,
                 "accuracy": _accuracy(rule_passed, case_count),
             },
+            "rule_normalized": {
+                "evaluated": case_count,
+                "passed": rule_normalized_passed,
+                "failed": case_count - rule_normalized_passed,
+                "accuracy": _accuracy(rule_normalized_passed, case_count),
+            },
             "model": {
                 "evaluated": model_evaluated,
                 "passed": model_passed,
                 "failed": model_evaluated - model_passed,
                 "accuracy": _accuracy(model_passed, model_evaluated),
+            },
+            "model_normalized": {
+                "evaluated": model_evaluated,
+                "passed": model_normalized_passed,
+                "failed": model_evaluated - model_normalized_passed,
+                "accuracy": _accuracy(model_normalized_passed, model_evaluated),
             },
             "disagreements": disagreements,
         },
@@ -204,6 +233,43 @@ def _accuracy(passed: int, evaluated: int) -> float | None:
     if evaluated == 0:
         return None
     return round(passed / evaluated, 4)
+
+
+def _normalize_contents(contents: list[str]) -> list[str]:
+    return [_normalize_content(content) for content in contents if _normalize_content(content)]
+
+
+def _normalize_content(content: str) -> str:
+    text = str(content or "")
+    text = text.split("（", 1)[0].split("(", 1)[0]
+    text = text.strip()
+    for prefix in ("用户偏好", "用户喜欢", "用户不喜欢", "用户讨厌", "用户", "我"):
+        if text.startswith(prefix):
+            text = text[len(prefix) :]
+            break
+    remove_chars = set(" \t\r\n，。,.；;：:、-_/")
+    return "".join(char for char in text.lower() if char not in remove_chars)
+
+
+def _contents_match(actual: list[str], expected: list[str]) -> bool:
+    if len(actual) != len(expected):
+        return False
+    unmatched = actual[:]
+    for expected_content in expected:
+        match_index = next(
+            (
+                index
+                for index, actual_content in enumerate(unmatched)
+                if actual_content == expected_content
+                or actual_content in expected_content
+                or expected_content in actual_content
+            ),
+            -1,
+        )
+        if match_index < 0:
+            return False
+        unmatched.pop(match_index)
+    return True
 
 
 if __name__ == "__main__":

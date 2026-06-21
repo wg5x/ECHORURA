@@ -96,6 +96,38 @@ class MemoryEvalRunnerTest(unittest.TestCase):
         self.assertEqual(report["summary"]["disagreements"], 1)
         self.assertEqual(report["records"][0]["rule_model_diff"][0]["field"], "contents")
 
+    def test_model_memories_report_normalized_match_for_reworded_contents(self) -> None:
+        cases = load_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "memory-model-normalized-001",
+                        "agent_profile_id": "phone-assistant",
+                        "transcript": [{"role": "user", "text": "记住我喜欢女声"}],
+                        "expected": {"contents": ["我喜欢女声"]},
+                        "tags": ["explicit"],
+                    }
+                ]
+            )
+        )
+        model_memories = load_model_memories(
+            _write_jsonl(
+                [
+                    {
+                        "case_id": "memory-model-normalized-001",
+                        "memories": [{"type": "preference", "content": "用户喜欢女声（prefer female voice）"}],
+                    }
+                ]
+            )
+        )
+
+        report = run_memory_eval(cases, model_memories=model_memories)
+
+        self.assertEqual(report["summary"]["model"]["passed"], 0)
+        self.assertEqual(report["summary"]["model_normalized"]["passed"], 1)
+        self.assertFalse(report["records"][0]["model_pass"])
+        self.assertTrue(report["records"][0]["model_normalized_pass"])
+
     def test_default_eval_dataset_has_400_persisted_cases(self) -> None:
         cases = load_eval_cases(default_eval_cases_path())
         ids = {case.id for case in cases}
