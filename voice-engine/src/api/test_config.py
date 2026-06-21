@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from .config import (
     SRC_DIR,
+    get_audit_reports_dir,
     get_conversations_dir,
     get_debug_events_dir,
     get_memories_dir,
@@ -62,6 +63,14 @@ class RecordingConfigTest(unittest.TestCase):
     def test_memories_absolute_dir_is_preserved(self) -> None:
         with patch.dict(os.environ, {"VOICE_MEMORIES_DIR": "/tmp/voice-engine-memories"}, clear=True):
             self.assertEqual(get_memories_dir(), Path("/tmp/voice-engine-memories"))
+
+    def test_audit_reports_relative_dir_is_resolved_under_src_dir(self) -> None:
+        with patch.dict(os.environ, {"VOICE_AUDIT_REPORTS_DIR": "data/audit-reports"}, clear=True):
+            self.assertEqual(get_audit_reports_dir(), SRC_DIR / "data" / "audit-reports")
+
+    def test_audit_reports_absolute_dir_is_preserved(self) -> None:
+        with patch.dict(os.environ, {"VOICE_AUDIT_REPORTS_DIR": "/tmp/voice-engine-audit-reports"}, clear=True):
+            self.assertEqual(get_audit_reports_dir(), Path("/tmp/voice-engine-audit-reports"))
 
 
 if __name__ == "__main__":

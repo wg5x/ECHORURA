@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { decodeBase64Pcm16, encodePcm16, resampleTo16k } from "../lib/audio";
 import { DEFAULT_VOICE_PROFILE, VOICE_PROFILES, findVoiceProfile } from "./voiceProfiles";
 import { attachRouteDecision, type LogItem, type RouteDecision } from "./logItems";
+import { extractSessionId, loadMemorySessionIds, rememberMemorySessionId } from "./memorySessions";
 import "./styles.css";
 
 type Status = "idle" | "connecting" | "connected" | "error";
@@ -77,6 +78,7 @@ export function App() {
   const [actionResult, setActionResult] = useState<ActionResult | null>(null);
   const [routerError, setRouterError] = useState("");
   const [routerLoading, setRouterLoading] = useState(false);
+  const [memorySessionIds, setMemorySessionIds] = useState(() => loadMemorySessionIds(window.localStorage));
   const selectedProfile = findVoiceProfile(selectedProfileId);
   const selectedAgentProfile =
     AGENT_PROFILE_OPTIONS.find((profile) => profile.id === selectedAgentProfileId) ?? AGENT_PROFILE_OPTIONS[0];
@@ -127,7 +129,8 @@ export function App() {
             ...selectedProfile.config,
             openingLine
           },
-          agent_profile_id: selectedAgentProfileId
+          agent_profile_id: selectedAgentProfileId,
+          memory_session_ids: memorySessionIds
         })
       );
     };
@@ -257,6 +260,8 @@ export function App() {
   }
 
   function handleServerMessage(data: ServerEvent) {
+    rememberServerSession(data);
+
     if (data.type === "status") {
       setStatus(data.status);
       audioUploadReadyRef.current = data.status === "connected";
@@ -385,6 +390,12 @@ export function App() {
     setMetrics((current) => ({ ...current, lastError: message }));
   }
 
+  function rememberServerSession(data: ServerEvent) {
+    const sessionId = extractSessionId(data);
+    if (!sessionId) return;
+    setMemorySessionIds(rememberMemorySessionId(window.localStorage, sessionId));
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -425,6 +436,22 @@ export function App() {
         <span>{selectedProfile.description}</span>
         <span>speaker: {selectedProfile.config.speaker}</span>
         <span className="profile-welcome">欢迎词: {openingLine}</span>
+      </section>
+
+      <section className="memory-panel">
+        <div>
+          <h2>Memory Sessions</h2>
+          <span>{memorySessionIds.length ? `${memorySessionIds.length} linked` : "none"}</span>
+        </div>
+        {memorySessionIds.length ? (
+          <ol>
+            {memorySessionIds.map((sessionId) => (
+              <li key={sessionId}>{sessionId}</li>
+            ))}
+          </ol>
+        ) : (
+          <p>新会话会先使用当前 Agent 的全局 memory。</p>
+        )}
       </section>
 
       <section className="text-input">

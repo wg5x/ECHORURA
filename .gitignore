@@ -14,3 +14,4 @@ voice-engine/src/data/recordings/
 voice-engine/src/data/debug-events/
 voice-engine/src/data/conversations/
 voice-engine/src/data/memories/
+voice-engine/src/data/audit-reports/

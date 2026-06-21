@@ -17,6 +17,7 @@ DEFAULT_RECORDINGS_DIR = SRC_DIR / "data" / "recordings"
 DEFAULT_DEBUG_EVENTS_DIR = SRC_DIR / "data" / "debug-events"
 DEFAULT_CONVERSATIONS_DIR = SRC_DIR / "data" / "conversations"
 DEFAULT_MEMORIES_DIR = SRC_DIR / "data" / "memories"
+DEFAULT_AUDIT_REPORTS_DIR = SRC_DIR / "data" / "audit-reports"
 
 ENV_FILES = (
     SRC_DIR / ".env.local",
@@ -89,4 +90,9 @@ def get_conversations_dir() -> Path:
 
 def get_memories_dir() -> Path:
     configured_dir = Path(os.environ.get("VOICE_MEMORIES_DIR") or DEFAULT_MEMORIES_DIR)
+    return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir
+
+
+def get_audit_reports_dir() -> Path:
+    configured_dir = Path(os.environ.get("VOICE_AUDIT_REPORTS_DIR") or DEFAULT_AUDIT_REPORTS_DIR)
     return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir

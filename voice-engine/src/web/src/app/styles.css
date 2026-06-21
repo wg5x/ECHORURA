@@ -120,6 +120,43 @@ button:disabled {
   grid-column: 2 / -1;
 }
 
+.memory-panel {
+  margin-top: 20px;
+  border: 1px solid #d8d2c8;
+  border-radius: 6px;
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.memory-panel > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.memory-panel h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.memory-panel span,
+.memory-panel p {
+  color: #5c6670;
+}
+
+.memory-panel ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+.memory-panel li {
+  overflow-wrap: anywhere;
+}
+
 .text-input input {
   min-width: 280px;
   flex: 1;
