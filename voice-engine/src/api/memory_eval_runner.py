@@ -247,6 +247,10 @@ def _normalize_content(content: str) -> str:
         if text.startswith(prefix):
             text = text[len(prefix) :]
             break
+    for prefix in ("以后别再", "以后不要再", "以后不要", "不要再", "别再"):
+        if text.startswith(prefix):
+            text = "不要" + text[len(prefix) :]
+            break
     remove_chars = set(" \t\r\n，。,.；;：:、-_/")
     return "".join(char for char in text.lower() if char not in remove_chars)
 

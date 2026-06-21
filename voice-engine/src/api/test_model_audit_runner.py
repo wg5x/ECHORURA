@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+import urllib.error
+from unittest import mock
 from pathlib import Path
 
 from api.memory_eval_runner import load_eval_cases as load_memory_eval_cases
 from api.model_audit_runner import generate_memory_model_memories, generate_router_model_decisions
-from api.model_audit_runner import _memory_prompt, _parse_json_object_from_text, _router_prompt
+from api.model_audit_runner import OpenAICompatibleJsonClient, _memory_prompt, _parse_json_object_from_text, _router_prompt
 from api.semantic_router.eval_runner import load_eval_cases as load_router_eval_cases
 
 
@@ -99,6 +101,23 @@ class ModelAuditRunnerTest(unittest.TestCase):
             {"mode": "chat", "intent": "general"},
         )
 
+    def test_openai_client_retries_transient_url_errors(self) -> None:
+        client = OpenAICompatibleJsonClient(
+            base_url="https://example.test/v1",
+            api_key="test-key",
+            model="test-model",
+            retry_delay_seconds=0,
+        )
+        response = _FakeHttpResponse({"choices": [{"message": {"content": "{\"mode\":\"chat\"}"}}]})
+
+        with mock.patch(
+            "api.model_audit_runner.urllib.request.urlopen",
+            side_effect=[urllib.error.URLError("transient eof"), response],
+        ) as urlopen:
+            self.assertEqual(client.complete_json("hello"), {"mode": "chat"})
+
+        self.assertEqual(urlopen.call_count, 2)
+
     def test_router_prompt_forces_closed_label_set(self) -> None:
         case = load_router_eval_cases(
             _write_jsonl(
@@ -119,6 +138,48 @@ class ModelAuditRunnerTest(unittest.TestCase):
         self.assertIn("Choose exactly one route from this closed catalog", prompt)
         self.assertIn('"mode":"native_action","intent":"calendar.create_event"', prompt)
         self.assertIn("Do not use scenario for Android phone actions", prompt)
+
+    def test_router_prompt_includes_open_page_and_profile_boundaries(self) -> None:
+        case = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-open-page-001",
+                        "text": "打开作品页",
+                        "agent_profile_id": "default",
+                        "expected": {"mode": "native_action", "intent": "open_page"},
+                        "tags": ["open_page"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _router_prompt(case)
+
+        self.assertIn('"mode":"native_action","intent":"open_page"', prompt)
+        self.assertIn("default profile supports only", prompt)
+        self.assertIn("phone-assistant profile supports only", prompt)
+
+    def test_router_prompt_routes_open_gallery_as_pick_image(self) -> None:
+        case = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-gallery-001",
+                        "text": "打开相册",
+                        "agent_profile_id": "phone-assistant",
+                        "expected": {"mode": "native_action", "intent": "gallery.pick_image"},
+                        "tags": ["gallery"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _router_prompt(case)
+
+        self.assertIn("打开相册", prompt)
+        self.assertIn("gallery.pick_image", prompt)
+        self.assertIn("Do not use app.open for gallery or album", prompt)
 
     def test_memory_prompt_requires_verbatim_user_phrase(self) -> None:
         case = load_memory_eval_cases(
@@ -150,6 +211,20 @@ class _FakeModelClient:
     def complete_json(self, prompt: str) -> dict:
         self.prompts.append(prompt)
         return self.response
+
+
+class _FakeHttpResponse:
+    def __init__(self, body: dict) -> None:
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return json.dumps(self.body).encode("utf-8")
 
 
 def _write_jsonl(records: list[dict]) -> Path:

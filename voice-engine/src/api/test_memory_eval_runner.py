@@ -128,6 +128,38 @@ class MemoryEvalRunnerTest(unittest.TestCase):
         self.assertFalse(report["records"][0]["model_pass"])
         self.assertTrue(report["records"][0]["model_normalized_pass"])
 
+    def test_model_memories_normalize_avoidance_wording(self) -> None:
+        cases = load_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "memory-model-avoidance-normalized-001",
+                        "agent_profile_id": "phone-assistant",
+                        "transcript": [{"role": "user", "text": "以后别再用男声"}],
+                        "expected": {"contents": ["不要用男声"]},
+                        "tags": ["explicit", "avoidance"],
+                    }
+                ]
+            )
+        )
+        model_memories = load_model_memories(
+            _write_jsonl(
+                [
+                    {
+                        "case_id": "memory-model-avoidance-normalized-001",
+                        "memories": [{"type": "preference", "content": "以后别再用男声"}],
+                    }
+                ]
+            )
+        )
+
+        report = run_memory_eval(cases, model_memories=model_memories)
+
+        self.assertEqual(report["summary"]["model"]["passed"], 0)
+        self.assertEqual(report["summary"]["model_normalized"]["passed"], 1)
+        self.assertFalse(report["records"][0]["model_pass"])
+        self.assertTrue(report["records"][0]["model_normalized_pass"])
+
     def test_default_eval_dataset_has_400_persisted_cases(self) -> None:
         cases = load_eval_cases(default_eval_cases_path())
         ids = {case.id for case in cases}

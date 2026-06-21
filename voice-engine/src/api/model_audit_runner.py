@@ -4,6 +4,8 @@ import argparse
 import concurrent.futures
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Protocol
@@ -20,10 +22,19 @@ class JsonModelClient(Protocol):
 
 
 class OpenAICompatibleJsonClient:
-    def __init__(self, base_url: str, api_key: str, model: str) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        api_key: str,
+        model: str,
+        max_attempts: int = 3,
+        retry_delay_seconds: float = 1.0,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
+        self.max_attempts = max(1, max_attempts)
+        self.retry_delay_seconds = retry_delay_seconds
 
     @classmethod
     def from_env(cls) -> "OpenAICompatibleJsonClient":
@@ -56,8 +67,16 @@ class OpenAICompatibleJsonClient:
             },
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=60) as response:
-            body = json.loads(response.read().decode("utf-8"))
+        for attempt in range(self.max_attempts):
+            try:
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    body = json.loads(response.read().decode("utf-8"))
+                break
+            except (urllib.error.URLError, TimeoutError, OSError) as error:
+                if attempt + 1 >= self.max_attempts or not _is_retryable_request_error(error):
+                    raise
+                if self.retry_delay_seconds > 0:
+                    time.sleep(self.retry_delay_seconds * (attempt + 1))
         content = body["choices"][0]["message"]["content"]
         return _parse_json_object_from_text(content)
 
@@ -142,15 +161,22 @@ def _router_prompt(case) -> str:
         '- {"mode":"native_action","intent":"app.search"} for app search requests.\n'
         '- {"mode":"native_action","intent":"app.open_deep_link"} for deep app actions such as WeChat message.\n'
         '- {"mode":"native_action","intent":"browser.open_url"} for URLs.\n'
-        '- {"mode":"native_action","intent":"gallery.pick_image"} for selecting images.\n'
+        '- {"mode":"native_action","intent":"gallery.pick_image"} for selecting images or opening gallery/album. '
+        "Do not use app.open for gallery or album.\n"
         '- {"mode":"native_action","intent":"media.play_from_search"} for playing/searching audio or video.\n'
         '- {"mode":"native_action","intent":"settings.open_wifi"} for Wi-Fi settings.\n'
         '- {"mode":"native_action","intent":"camera.capture_photo"} for photos.\n'
         '- {"mode":"native_action","intent":"camera.capture_video"} for videos.\n'
+        '- {"mode":"native_action","intent":"open_page"} for opening local product pages such as work, creation, or templates.\n'
         '- {"mode":"server_action","intent":"memory.preference.update"} only for explicit remember/update preference requests.\n'
         '- {"mode":"scenario","intent":"create_song","scenario_id":"music_creation","scenario_intent":"create_song"} for music creation.\n'
         '- {"mode":"scenario","intent":"revise_song","scenario_id":"music_creation","scenario_intent":"revise_song"} for music revision.\n'
         '- {"mode":"scenario","intent":"publish_work","scenario_id":"music_creation","scenario_intent":"publish_work"} for publishing work.\n'
+        "Profile boundaries:\n"
+        "default profile supports only chat.general, native_action open_page, and music_creation scenarios. "
+        "Phone/system intents outside this profile must use chat/general.\n"
+        "phone-assistant profile supports only chat.general, native_action phone/calendar/app/browser/gallery/media/settings/camera/open_page, "
+        "and server_action memory.preference.update. Music creation scenarios outside this profile must use chat/general.\n"
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"text: {case.text}"
     )
@@ -199,6 +225,12 @@ def _run_cases(cases, run_case, workers: int) -> list[dict]:
         for future in concurrent.futures.as_completed(future_to_index):
             results[future_to_index[future]] = future.result()
     return [result for result in results if result is not None]
+
+
+def _is_retryable_request_error(error: BaseException) -> bool:
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code in {408, 409, 425, 429, 500, 502, 503, 504}
+    return isinstance(error, (urllib.error.URLError, TimeoutError, OSError))
 
 
 def _parse_json_object_from_text(text: str) -> dict:
