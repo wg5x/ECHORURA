@@ -24,6 +24,7 @@ type ActionResult = {
   intent: string;
   requires_confirmation?: boolean;
   requires_native_bridge?: boolean;
+  mock_request?: Record<string, unknown> | null;
   arguments?: Record<string, unknown>;
 };
 
@@ -519,17 +520,33 @@ export function App() {
               </div>
             </dl>
             {actionResult ? (
-              <div className="action-result">
-                <strong>{actionResult.summary}</strong>
-                <span>
-                  {actionResult.status} · {actionResult.result_type}
-                  {actionResult.requires_native_bridge ? " · requires Native Bridge" : ""}
-                </span>
-              </div>
+              <>
+                <div className="action-result">
+                  <strong>{actionResult.summary}</strong>
+                  <span>
+                    {actionResult.status} · {actionResult.result_type}
+                    {actionResult.requires_native_bridge ? " · requires Native Bridge" : ""}
+                  </span>
+                </div>
+                {actionResult.mock_request ? (
+                  <div className="mock-request">
+                    <strong>Mock request</strong>
+                    <pre>{JSON.stringify(actionResult.mock_request, null, 2)}</pre>
+                  </div>
+                ) : null}
+              </>
             ) : null}
             <div className="router-json-grid">
-              <pre className="router-json">{JSON.stringify(routerResult, null, 2)}</pre>
-              {actionResult ? <pre className="router-json">{JSON.stringify(actionResult, null, 2)}</pre> : null}
+              <div className="router-json-card">
+                <strong>Intent / route_decision</strong>
+                <pre className="router-json">{JSON.stringify(routerResult, null, 2)}</pre>
+              </div>
+              {actionResult ? (
+                <div className="router-json-card">
+                  <strong>Action / action_result</strong>
+                  <pre className="router-json">{JSON.stringify(actionResult, null, 2)}</pre>
+                </div>
+              ) : null}
             </div>
           </>
         ) : null}
