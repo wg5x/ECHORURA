@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import urllib.request
@@ -61,48 +62,35 @@ class OpenAICompatibleJsonClient:
         return _parse_json_object_from_text(content)
 
 
-def generate_router_model_decisions(cases, client: JsonModelClient, out_path: Path, limit: int | None = None) -> Path:
+def generate_router_model_decisions(
+    cases,
+    client: JsonModelClient,
+    out_path: Path,
+    limit: int | None = None,
+    workers: int = 1,
+) -> Path:
     selected_cases = cases[:limit] if limit else cases
+    records = _run_cases(selected_cases, lambda case: _router_record(case, client), workers)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as file:
-        for case in selected_cases:
-            decision = client.complete_json(_router_prompt(case))
-            file.write(
-                json.dumps(
-                    {
-                        "case_id": case.id,
-                        "decision": {
-                            key: decision[key]
-                            for key in ("mode", "intent", "scenario_id", "scenario_intent")
-                            if key in decision
-                        },
-                    },
-                    ensure_ascii=False,
-                    separators=(",", ":"),
-                )
-                + "\n"
-            )
+        for record in records:
+            file.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
     return out_path
 
 
-def generate_memory_model_memories(cases, client: JsonModelClient, out_path: Path, limit: int | None = None) -> Path:
+def generate_memory_model_memories(
+    cases,
+    client: JsonModelClient,
+    out_path: Path,
+    limit: int | None = None,
+    workers: int = 1,
+) -> Path:
     selected_cases = cases[:limit] if limit else cases
+    records = _run_cases(selected_cases, lambda case: _memory_record(case, client), workers)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as file:
-        for case in selected_cases:
-            response = client.complete_json(_memory_prompt(case))
-            memories = response.get("memories") if isinstance(response.get("memories"), list) else []
-            file.write(
-                json.dumps(
-                    {
-                        "case_id": case.id,
-                        "memories": [memory for memory in memories if isinstance(memory, dict)],
-                    },
-                    ensure_ascii=False,
-                    separators=(",", ":"),
-                )
-                + "\n"
-            )
+        for record in records:
+            file.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
     return out_path
 
 
@@ -111,6 +99,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--kind", choices=("router", "memory", "both"), default="both")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args(argv)
 
     client = OpenAICompatibleJsonClient.from_env()
@@ -122,6 +111,7 @@ def main(argv: list[str] | None = None) -> None:
                 client,
                 args.out_dir / "router_model_decisions.jsonl",
                 limit=args.limit,
+                workers=args.workers,
             )
         )
     if args.kind in {"memory", "both"}:
@@ -131,6 +121,7 @@ def main(argv: list[str] | None = None) -> None:
                 client,
                 args.out_dir / "memory_model_memories.jsonl",
                 limit=args.limit,
+                workers=args.workers,
             )
         )
     print(json.dumps(outputs, ensure_ascii=False, indent=2))
@@ -139,17 +130,27 @@ def main(argv: list[str] | None = None) -> None:
 def _router_prompt(case) -> str:
     return (
         "Label this voice command for semantic routing.\n"
-        "Return one JSON object using only this schema:\n"
-        "{\"mode\":\"chat|scenario|native_action|server_action|clarify|reject\","
-        "\"intent\":\"...\","
-        "\"scenario_id\":\"optional\","
-        "\"scenario_intent\":\"optional\"}\n"
-        "Allowed intents include: general, phone.dial, sms.compose, calendar.create_event, app.open, app.search, "
-        "app.open_deep_link, browser.open_url, gallery.pick_image, media.play_from_search, settings.open_wifi, "
-        "camera.capture_photo, camera.capture_video, memory.preference.update, create_song, revise_song, publish_work.\n"
-        "Use mode=native_action for Android-like phone actions. Use mode=chat and intent=general for ordinary chat. "
-        "Use mode=server_action and intent=memory.preference.update only for explicit remember/update preference requests. "
-        "Do not invent labels.\n"
+        "Choose exactly one route from this closed catalog and return only JSON with mode and intent. "
+        "Do not invent labels. Do not add entities or explanations.\n"
+        "Closed catalog:\n"
+        '- {"mode":"chat","intent":"general"} for ordinary chat, weather, questions, or unsupported requests.\n'
+        '- {"mode":"native_action","intent":"phone.dial"} for phone calls.\n'
+        '- {"mode":"native_action","intent":"sms.compose"} for SMS/messages.\n'
+        '- {"mode":"native_action","intent":"calendar.create_event"} for creating calendar events/reminders. '
+        "Do not use scenario for Android phone actions.\n"
+        '- {"mode":"native_action","intent":"app.open"} for opening apps.\n'
+        '- {"mode":"native_action","intent":"app.search"} for app search requests.\n'
+        '- {"mode":"native_action","intent":"app.open_deep_link"} for deep app actions such as WeChat message.\n'
+        '- {"mode":"native_action","intent":"browser.open_url"} for URLs.\n'
+        '- {"mode":"native_action","intent":"gallery.pick_image"} for selecting images.\n'
+        '- {"mode":"native_action","intent":"media.play_from_search"} for playing/searching audio or video.\n'
+        '- {"mode":"native_action","intent":"settings.open_wifi"} for Wi-Fi settings.\n'
+        '- {"mode":"native_action","intent":"camera.capture_photo"} for photos.\n'
+        '- {"mode":"native_action","intent":"camera.capture_video"} for videos.\n'
+        '- {"mode":"server_action","intent":"memory.preference.update"} only for explicit remember/update preference requests.\n'
+        '- {"mode":"scenario","intent":"create_song","scenario_id":"music_creation","scenario_intent":"create_song"} for music creation.\n'
+        '- {"mode":"scenario","intent":"revise_song","scenario_id":"music_creation","scenario_intent":"revise_song"} for music revision.\n'
+        '- {"mode":"scenario","intent":"publish_work","scenario_id":"music_creation","scenario_intent":"publish_work"} for publishing work.\n'
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"text: {case.text}"
     )
@@ -157,11 +158,47 @@ def _router_prompt(case) -> str:
 
 def _memory_prompt(case) -> str:
     return (
-        "Extract long-term user memories from this transcript. "
-        "Return JSON: {\"memories\":[{\"type\":\"preference\",\"content\":\"...\",\"confidence\":0.0}]}.\n"
+        "Extract durable long-term user memories from this transcript.\n"
+        "Return only JSON: {\"memories\":[{\"type\":\"preference\",\"content\":\"...\",\"confidence\":0.0}]}.\n"
+        "content must be copied verbatim from the user's Chinese phrase whenever possible. "
+        "Do not translate, explain, add parentheses, or rewrite into third person. "
+        "Keep polarity: 喜欢, 不喜欢, 讨厌, 不要, 别再. "
+        "If there is no durable memory, return {\"memories\":[]}.\n"
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"transcript: {json.dumps(case.transcript, ensure_ascii=False)}"
     )
+
+
+def _router_record(case, client: JsonModelClient) -> dict:
+    decision = client.complete_json(_router_prompt(case))
+    return {
+        "case_id": case.id,
+        "decision": {
+            key: decision[key]
+            for key in ("mode", "intent", "scenario_id", "scenario_intent")
+            if key in decision
+        },
+    }
+
+
+def _memory_record(case, client: JsonModelClient) -> dict:
+    response = client.complete_json(_memory_prompt(case))
+    memories = response.get("memories") if isinstance(response.get("memories"), list) else []
+    return {
+        "case_id": case.id,
+        "memories": [memory for memory in memories if isinstance(memory, dict)],
+    }
+
+
+def _run_cases(cases, run_case, workers: int) -> list[dict]:
+    if workers <= 1:
+        return [run_case(case) for case in cases]
+    results: list[dict | None] = [None] * len(cases)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_index = {executor.submit(run_case, case): index for index, case in enumerate(cases)}
+        for future in concurrent.futures.as_completed(future_to_index):
+            results[future_to_index[future]] = future.result()
+    return [result for result in results if result is not None]
 
 
 def _parse_json_object_from_text(text: str) -> dict:
@@ -186,10 +223,14 @@ def _parse_json_object_from_text(text: str) -> dict:
         except json.JSONDecodeError:
             pass
 
-    start = text.find("{")
-    end = text.rfind("}")
-    if start >= 0 and end > start:
-        parsed = json.loads(text[start : end + 1])
+    decoder = json.JSONDecoder()
+    for index, character in enumerate(text):
+        if character != "{":
+            continue
+        try:
+            parsed, _ = decoder.raw_decode(text[index:])
+        except json.JSONDecodeError:
+            continue
         if isinstance(parsed, dict):
             return parsed
 
