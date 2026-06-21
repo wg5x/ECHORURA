@@ -181,6 +181,54 @@ class ModelAuditRunnerTest(unittest.TestCase):
         self.assertIn("gallery.pick_image", prompt)
         self.assertIn("Do not use app.open for gallery or album", prompt)
 
+    def test_router_prompt_disambiguates_phone_action_phrases(self) -> None:
+        case = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-phone-disambiguation-001",
+                        "text": "帮我发短信告诉他我晚点到",
+                        "agent_profile_id": "phone-assistant",
+                        "expected": {"mode": "native_action", "intent": "sms.compose"},
+                        "tags": ["sms"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _router_prompt(case)
+
+        self.assertIn("发短信", prompt)
+        self.assertIn("发信息告诉他", prompt)
+        self.assertIn("发消息", prompt)
+        self.assertIn("sms.compose", prompt)
+        self.assertIn("京东搜索", prompt)
+        self.assertIn("app.search", prompt)
+        self.assertIn("发微信给", prompt)
+        self.assertIn("app.open_deep_link", prompt)
+        self.assertIn("看电影", prompt)
+        self.assertIn("media.play_from_search", prompt)
+
+    def test_router_prompt_disambiguates_default_music_publish(self) -> None:
+        case = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-music-publish-001",
+                        "text": "发出去",
+                        "agent_profile_id": "default",
+                        "expected": {"mode": "scenario", "intent": "publish_work"},
+                        "tags": ["music"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _router_prompt(case)
+
+        self.assertIn("发出去", prompt)
+        self.assertIn("publish_work", prompt)
+
     def test_memory_prompt_requires_verbatim_user_phrase(self) -> None:
         case = load_memory_eval_cases(
             _write_jsonl(

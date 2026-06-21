@@ -177,6 +177,12 @@ def _router_prompt(case) -> str:
         "Phone/system intents outside this profile must use chat/general.\n"
         "phone-assistant profile supports only chat.general, native_action phone/calendar/app/browser/gallery/media/settings/camera/open_page, "
         "and server_action memory.preference.update. Music creation scenarios outside this profile must use chat/general.\n"
+        "Disambiguation examples:\n"
+        "发短信, 发信息, 发消息, 短信通知, 发信息告诉他... => sms.compose, not chat/general.\n"
+        "淘宝搜索, 京东搜索, 打开京东搜索 => app.search, not app.open_deep_link.\n"
+        "发微信给...说... => app.open_deep_link, not chat/general.\n"
+        "看电影, 看视频, 播放音乐, 听歌 => media.play_from_search, not chat/general.\n"
+        "For default profile music publishing, 发出去 => publish_work.\n"
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"text: {case.text}"
     )
