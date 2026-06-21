@@ -24,6 +24,8 @@ export type LogItem = {
 };
 
 export function attachRouteDecision(items: LogItem[], decision: RouteDecision): LogItem[] {
+  if (decision.mode === "chat" || decision.intent === "general") return items;
+
   const targetIndex = items.findIndex((item) => item.role === "user" && item.turnId === decision.turn_id);
   if (targetIndex < 0) return items;
 

@@ -90,6 +90,17 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["arguments"]["title"], "项目评审")
         self.assertEqual(decision["arguments"]["time_text"], "明天上午十点")
 
+    def test_phone_assistant_does_not_route_weather_as_calendar_event(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-weather",
+            "今天的天气怎么样",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "chat")
+        self.assertEqual(decision["intent"], "general")
+
     def test_phone_assistant_routes_phone_dial(self) -> None:
         decision = self.router.route_text(
             "session-1",
@@ -113,6 +124,28 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["mode"], "native_action")
         self.assertEqual(decision["intent"], "sms.compose")
         self.assertEqual(decision["arguments"]["message_text"], "告诉他我晚点到")
+
+    def test_phone_assistant_routes_sms_before_calendar_when_message_mentions_meeting_time(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-3b",
+            "发短信跟他说会议改到三点",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "native_action")
+        self.assertEqual(decision["intent"], "sms.compose")
+
+    def test_phone_assistant_does_not_route_music_revision_as_calendar_time(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-music-revision",
+            "副歌慢一点",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "chat")
+        self.assertEqual(decision["intent"], "general")
 
     def test_phone_assistant_routes_app_open(self) -> None:
         decision = self.router.route_text(

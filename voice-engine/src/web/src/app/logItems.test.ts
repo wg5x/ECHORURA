@@ -61,3 +61,17 @@ test("ignores route decision when no matching user turn exists", () => {
 
   assertDeepEqual(attachRouteDecision(items, decision), items, "unmatched decision should not change logs");
 });
+
+test("does not attach ordinary chat route decisions to user messages", () => {
+  const items: LogItem[] = [{ id: "user-1", role: "user", text: "今天天气怎么样", at: "10:00:01", turnId: "turn-1" }];
+  const decision: RouteDecision = {
+    type: "route_decision",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    mode: "chat",
+    intent: "general",
+    confidence: 0.45
+  };
+
+  assertDeepEqual(attachRouteDecision(items, decision), items, "ordinary chat should not show intent hint");
+});

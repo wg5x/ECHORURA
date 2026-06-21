@@ -38,6 +38,10 @@ def _match_capability(text: str, capabilities: list[Capability]) -> Capability:
         if not capability.keywords:
             fallback = capability
             continue
+        if capability.id == "native.calendar.create_event":
+            if _is_calendar_event_request(text):
+                return capability
+            continue
         if any(_normalize_text(keyword) in text for keyword in capability.keywords):
             return capability
     return fallback
@@ -73,6 +77,28 @@ def _extract_arguments(capability: Capability, raw_text: str, normalized_text: s
     if capability.id == "music_creation.revise_song":
         return {"revision_prompt": raw_text.strip()}
     return {}
+
+
+def _is_calendar_event_request(text: str) -> bool:
+    if any(marker in text for marker in ("发短信", "发信息", "发消息", "短信", "发微信", "微信发给", "副歌")):
+        return False
+    if any(marker in text for marker in ("天气", "气温", "下雨", "温度", "多少度")):
+        return False
+
+    action_markers = ("开会", "会议", "日程", "提醒", "记录", "创建", "新增", "添加", "评审", "面试")
+    time_markers = ("今天", "明天", "后天", "上午", "中午", "下午", "晚上")
+    if _has_clock_time(text) and (
+        any(marker in text for marker in action_markers) or any(marker in text for marker in time_markers)
+    ):
+        return True
+    return any(marker in text for marker in action_markers) and any(marker in text for marker in time_markers)
+
+
+def _has_clock_time(text: str) -> bool:
+    return bool(
+        re.search(r"(今天|明天|后天)?(上午|中午|下午|晚上)?[一二两三四五六七八九十\d]+点半?", text)
+        or re.search(r"(今天|明天|后天)?\d{1,2}:\d{2}", text)
+    )
 
 
 def _extract_calendar_event_arguments(raw_text: str) -> dict[str, str]:

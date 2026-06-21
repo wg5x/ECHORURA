@@ -1,0 +1,400 @@
+{"id":"phone-dial-001","text":"打电话 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-002","text":"打电话 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-003","text":"打电话 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-004","text":"打电话 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-005","text":"打电话 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-006","text":"拨号 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-007","text":"拨号 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-008","text":"拨号 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-009","text":"拨号 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-010","text":"拨号 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-011","text":"帮我打电话 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-012","text":"帮我打电话 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-013","text":"帮我打电话 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-014","text":"帮我打电话 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-015","text":"帮我打电话 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-016","text":"呼叫 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-017","text":"呼叫 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-018","text":"呼叫 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-019","text":"呼叫 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-020","text":"呼叫 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-021","text":"现在打电话给 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-022","text":"现在打电话给 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-023","text":"现在打电话给 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-024","text":"现在打电话给 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-025","text":"现在打电话给 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-026","text":"麻烦拨号 13641194007","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-027","text":"麻烦拨号 13800138000","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-028","text":"麻烦拨号 13912345678","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-029","text":"麻烦拨号 15800001111","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-dial-030","text":"麻烦拨号 18688889999","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"phone.dial"},"tags":["phone","native_action"]}
+{"id":"phone-sms-001","text":"发短信告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-002","text":"发短信跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-003","text":"发短信通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-004","text":"发短信发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-005","text":"发短信说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-006","text":"发信息告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-007","text":"发信息跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-008","text":"发信息通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-009","text":"发信息发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-010","text":"发信息说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-011","text":"发消息告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-012","text":"发消息跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-013","text":"发消息通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-014","text":"发消息发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-015","text":"发消息说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-016","text":"短信告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-017","text":"短信跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-018","text":"短信通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-019","text":"短信发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-020","text":"短信说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-021","text":"帮我发短信告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-022","text":"帮我发短信跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-023","text":"帮我发短信通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-024","text":"帮我发短信发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-025","text":"帮我发短信说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-026","text":"给他发短信告诉他我晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-027","text":"给他发短信跟他说会议改到三点","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-028","text":"给他发短信通知妈妈我到家了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-029","text":"给他发短信发给张三明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-sms-030","text":"给他发短信说我马上出发","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"sms.compose"},"tags":["sms","native_action"]}
+{"id":"phone-calendar-001","text":"今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-002","text":"明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-003","text":"后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-004","text":"今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-005","text":"明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-006","text":"今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-007","text":"明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-008","text":"后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-009","text":"今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-010","text":"明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-011","text":"记录今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-012","text":"记录明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-013","text":"记录后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-014","text":"记录今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-015","text":"记录明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-016","text":"记录今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-017","text":"记录明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-018","text":"记录后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-019","text":"记录今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-020","text":"记录明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-021","text":"帮我记录今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-022","text":"帮我记录明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-023","text":"帮我记录后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-024","text":"帮我记录今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-025","text":"帮我记录明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-026","text":"帮我记录今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-027","text":"帮我记录明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-028","text":"帮我记录后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-029","text":"帮我记录今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-030","text":"帮我记录明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-031","text":"创建今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-032","text":"创建明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-033","text":"创建后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-034","text":"创建今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-035","text":"创建明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-036","text":"创建今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-037","text":"创建明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-038","text":"创建后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-039","text":"创建今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-040","text":"创建明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-041","text":"新增今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-042","text":"新增明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-043","text":"新增后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-044","text":"新增今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-045","text":"新增明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-046","text":"新增今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-047","text":"新增明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-048","text":"新增后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-049","text":"新增今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-050","text":"新增明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-051","text":"提醒我今天下午三点开会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-052","text":"提醒我明天上午十点项目评审","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-053","text":"提醒我后天下午两点面试","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-054","text":"提醒我今天晚上八点提醒我买牛奶","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-055","text":"提醒我明天中午十二点和客户吃饭","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-056","text":"提醒我今天上午九点半团队站会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-057","text":"提醒我明天下午四点产品讨论","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-058","text":"提醒我后天晚上七点健身","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-059","text":"提醒我今天17:30回家","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-calendar-060","text":"提醒我明天09:15晨会","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"calendar.create_event"},"tags":["calendar","native_action"]}
+{"id":"phone-app-open-001","text":"打开淘宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-002","text":"打开微信","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-003","text":"打开抖音","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-004","text":"打开支付宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-005","text":"打开京东","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-006","text":"打开美团","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-007","text":"打开哔哩哔哩","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-008","text":"打开b站","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-009","text":"打开小红书","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-010","text":"打开淘宝。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-011","text":"帮我打开淘宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-012","text":"帮我打开微信","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-013","text":"帮我打开抖音","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-014","text":"帮我打开支付宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-015","text":"帮我打开京东","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-016","text":"帮我打开美团","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-017","text":"帮我打开哔哩哔哩","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-018","text":"帮我打开b站","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-019","text":"帮我打开小红书","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-020","text":"帮我打开淘宝。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-021","text":"现在打开淘宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-022","text":"现在打开微信","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-023","text":"现在打开抖音","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-024","text":"现在打开支付宝","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-025","text":"现在打开京东","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-026","text":"现在打开美团","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-027","text":"现在打开哔哩哔哩","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-028","text":"现在打开b站","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-029","text":"现在打开小红书","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-open-030","text":"现在打开淘宝。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open"},"tags":["app","native_action"]}
+{"id":"phone-app-search-001","text":"打开淘宝搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-002","text":"打开淘宝搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-003","text":"打开淘宝搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-004","text":"打开淘宝搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-005","text":"打开淘宝搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-006","text":"淘宝搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-007","text":"淘宝搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-008","text":"淘宝搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-009","text":"淘宝搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-010","text":"淘宝搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-011","text":"打开京东搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-012","text":"打开京东搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-013","text":"打开京东搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-014","text":"打开京东搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-015","text":"打开京东搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-016","text":"京东搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-017","text":"京东搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-018","text":"京东搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-019","text":"京东搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-020","text":"京东搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-021","text":"帮我打开淘宝搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-022","text":"帮我打开淘宝搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-023","text":"帮我打开淘宝搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-024","text":"帮我打开淘宝搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-025","text":"帮我打开淘宝搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-026","text":"帮我打开京东搜索耳机","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-027","text":"帮我打开京东搜索手机壳","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-028","text":"帮我打开京东搜索咖啡豆","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-029","text":"帮我打开京东搜索运动鞋","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-search-030","text":"帮我打开京东搜索机械键盘","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.search"},"tags":["app_search","native_action"]}
+{"id":"phone-app-deep-link-001","text":"发微信给张三说我到了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-002","text":"发微信给张三说晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-003","text":"发微信给张三说明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-004","text":"发微信给张三说会议取消了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-005","text":"发微信给李四说我到了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-006","text":"发微信给李四说晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-007","text":"发微信给李四说明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-008","text":"发微信给李四说会议取消了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-009","text":"发微信给王五说我到了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-010","text":"发微信给王五说晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-011","text":"发微信给王五说明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-012","text":"发微信给王五说会议取消了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-013","text":"发微信给小明说我到了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-014","text":"发微信给小明说晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-015","text":"发微信给小明说明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-016","text":"发微信给小明说会议取消了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-017","text":"发微信给妈妈说我到了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-018","text":"发微信给妈妈说晚点到","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-019","text":"发微信给妈妈说明天见","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-app-deep-link-020","text":"发微信给妈妈说会议取消了","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"app.open_deep_link"},"tags":["wechat","native_action","requires_confirmation"]}
+{"id":"phone-browser-001","text":"打开 https://example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-002","text":"打开 https://openai.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-003","text":"打开 http://localhost:5173","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-004","text":"打开 https://news.example.com/a","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-005","text":"打开 https://weather.example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-006","text":"打开网址 https://example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-007","text":"打开网址 https://openai.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-008","text":"打开网址 http://localhost:5173","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-009","text":"打开网址 https://news.example.com/a","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-010","text":"打开网址 https://weather.example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-011","text":"打开链接 https://example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-012","text":"打开链接 https://openai.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-013","text":"打开链接 http://localhost:5173","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-014","text":"打开链接 https://news.example.com/a","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-015","text":"打开链接 https://weather.example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-016","text":"浏览器打开 https://example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-017","text":"浏览器打开 https://openai.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-018","text":"浏览器打开 http://localhost:5173","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-019","text":"浏览器打开 https://news.example.com/a","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-browser-020","text":"浏览器打开 https://weather.example.com","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"browser.open_url"},"tags":["browser","native_action"]}
+{"id":"phone-gallery-001","text":"打开相册选一张图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-002","text":"选择图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-003","text":"选图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-004","text":"从相册选一张图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-005","text":"打开相册","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-006","text":"帮我打开相册选一张图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-007","text":"我要选一张图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-008","text":"从相册选择图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-009","text":"打开相册选图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-gallery-010","text":"选一张图片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"gallery.pick_image"},"tags":["gallery","native_action"]}
+{"id":"phone-media-001","text":"看视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-002","text":"播放视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-003","text":"看电影","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-004","text":"播放音乐","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-005","text":"听歌","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-006","text":"看视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-007","text":"播放视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-008","text":"看电影。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-009","text":"播放音乐。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-010","text":"听歌。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-011","text":"看视频，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-012","text":"播放视频，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-013","text":"看电影，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-014","text":"播放音乐，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-media-015","text":"听歌，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"media.play_from_search"},"tags":["media","native_action"]}
+{"id":"phone-settings-001","text":"打开 Wi-Fi 设置","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-002","text":"打开 wifi 设置","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-003","text":"打开无线网络","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-004","text":"wifi","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-005","text":"wi-fi","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-006","text":"打开 Wi-Fi 设置。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-007","text":"打开 wifi 设置。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-008","text":"打开无线网络。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-009","text":"wifi。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-010","text":"wi-fi。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-011","text":"打开 Wi-Fi 设置，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-012","text":"打开 wifi 设置，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-013","text":"打开无线网络，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-014","text":"wifi，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-settings-015","text":"wi-fi，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"settings.open_wifi"},"tags":["settings","native_action"]}
+{"id":"phone-camera-photo-001","text":"拍照","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-002","text":"拍张照片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-003","text":"拍一张照片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-004","text":"照相","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-005","text":"帮我拍张照片","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-006","text":"拍照。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-007","text":"拍张照片。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-008","text":"拍一张照片。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-009","text":"照相。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-photo-010","text":"帮我拍张照片。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_photo"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-001","text":"录视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-002","text":"录个视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-003","text":"拍视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-004","text":"录像","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-005","text":"帮我录个视频","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-006","text":"录视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-007","text":"录个视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-008","text":"拍视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-009","text":"录像。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"phone-camera-video-010","text":"帮我录个视频。","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"camera.capture_video"},"tags":["camera","native_action"]}
+{"id":"default-song-create-001","text":"帮我做一首下班路上听的中文 LoFi","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-002","text":"做一首夏天的歌","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-003","text":"生成一首民谣","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-004","text":"写一首摇滚歌","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-005","text":"创作一首电子歌","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-006","text":"来一首说唱","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-007","text":"做歌给朋友生日","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-008","text":"写歌关于北京夜晚","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-009","text":"帮我做一首下班路上听的中文 LoFi。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-010","text":"做一首夏天的歌。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-011","text":"生成一首民谣。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-012","text":"写一首摇滚歌。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-013","text":"创作一首电子歌。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-014","text":"来一首说唱。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-015","text":"做歌给朋友生日。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-016","text":"写歌关于北京夜晚。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-017","text":"帮我做一首下班路上听的中文 LoFi，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-018","text":"做一首夏天的歌，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-019","text":"生成一首民谣，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-020","text":"写一首摇滚歌，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-021","text":"创作一首电子歌，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-022","text":"来一首说唱，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-023","text":"做歌给朋友生日，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-create-024","text":"写歌关于北京夜晚，谢谢","agent_profile_id":"default","expected":{"mode":"scenario","intent":"create_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-001","text":"副歌慢一点","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-002","text":"改成女声","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-003","text":"调整节奏","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-004","text":"重新唱一遍","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-005","text":"修改歌词","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-006","text":"副歌慢一点。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-007","text":"改成女声。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-008","text":"调整节奏。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-009","text":"重新唱一遍。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-revise-010","text":"修改歌词。","agent_profile_id":"default","expected":{"mode":"scenario","intent":"revise_song"},"tags":["music","scenario"]}
+{"id":"default-song-publish-001","text":"保存并发布","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"default-song-publish-002","text":"发布作品","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"default-song-publish-003","text":"发出去","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"default-song-publish-004","text":"发布到作品页","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"default-song-publish-005","text":"帮我发布作品","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"default-song-publish-006","text":"保存并发布到作品页","agent_profile_id":"default","expected":{"mode":"scenario","intent":"publish_work"},"tags":["music","scenario","requires_confirmation"]}
+{"id":"native-open-page-001","text":"打开作品页","agent_profile_id":"default","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-002","text":"去作品页","agent_profile_id":"default","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-003","text":"查看作品","agent_profile_id":"default","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-004","text":"打开创作页","agent_profile_id":"default","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-005","text":"打开模板页","agent_profile_id":"default","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-006","text":"打开作品页","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-007","text":"去作品页","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-008","text":"查看作品","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-009","text":"打开创作页","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"native-open-page-010","text":"打开模板页","agent_profile_id":"phone-assistant","expected":{"mode":"native_action","intent":"open_page"},"tags":["open_page","native_action"]}
+{"id":"phone-weather-001","text":"今天的天气怎么样","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-002","text":"今天天气怎么样","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-003","text":"明天下雨吗","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-004","text":"后天会不会降温","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-005","text":"今天多少度","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-006","text":"上海今天多少度","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-007","text":"北京明天天气","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-008","text":"今天空气质量怎么样","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-009","text":"明天下午天气如何","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-010","text":"今天适合出门吗","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-011","text":"外面冷不冷","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-012","text":"今天需要带伞吗","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-013","text":"周末天气好吗","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-014","text":"现在气温多少","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-015","text":"晚上会下雨吗","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-016","text":"今天的天气怎么样。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-017","text":"今天天气怎么样。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-018","text":"明天下雨吗。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-019","text":"后天会不会降温。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-020","text":"今天多少度。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-021","text":"上海今天多少度。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-022","text":"北京明天天气。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-023","text":"今天空气质量怎么样。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-024","text":"明天下午天气如何。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-025","text":"今天适合出门吗。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-026","text":"外面冷不冷。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-027","text":"今天需要带伞吗。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-028","text":"周末天气好吗。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-029","text":"现在气温多少。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-030","text":"晚上会下雨吗。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-031","text":"今天的天气怎么样，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-032","text":"今天天气怎么样，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-033","text":"明天下雨吗，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-034","text":"后天会不会降温，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-035","text":"今天多少度，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-036","text":"上海今天多少度，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-037","text":"北京明天天气，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-038","text":"今天空气质量怎么样，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-039","text":"明天下午天气如何，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-weather-040","text":"今天适合出门吗，谢谢","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["weather","chat","negative-calendar"]}
+{"id":"phone-chat-001","text":"你好","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-002","text":"你是谁","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-003","text":"讲个笑话","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-004","text":"帮我解释一下路由是什么","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-005","text":"这个问题怎么理解","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-006","text":"我有点累","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-007","text":"随便聊聊","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-008","text":"你能做什么","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-009","text":"现在几点了","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-010","text":"谢谢你","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-011","text":"你好。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-012","text":"你是谁。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-013","text":"讲个笑话。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-014","text":"帮我解释一下路由是什么。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-015","text":"这个问题怎么理解。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-016","text":"我有点累。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-017","text":"随便聊聊。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-018","text":"你能做什么。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-019","text":"现在几点了。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-chat-020","text":"谢谢你。","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["chat"]}
+{"id":"phone-cross-agent-001","text":"帮我做一首歌","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","music_negative"]}
+{"id":"phone-cross-agent-002","text":"写一首摇滚歌","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","music_negative"]}
+{"id":"phone-cross-agent-003","text":"生成一首民谣","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","music_negative"]}
+{"id":"phone-cross-agent-004","text":"做歌给朋友生日","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","music_negative"]}
+{"id":"phone-cross-agent-005","text":"副歌慢一点","agent_profile_id":"phone-assistant","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","music_negative"]}
+{"id":"default-cross-agent-001","text":"打开淘宝","agent_profile_id":"default","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","phone_negative"]}
+{"id":"default-cross-agent-002","text":"打开微信","agent_profile_id":"default","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","phone_negative"]}
+{"id":"default-cross-agent-003","text":"打开抖音","agent_profile_id":"default","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","phone_negative"]}
+{"id":"default-cross-agent-004","text":"淘宝搜索耳机","agent_profile_id":"default","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","phone_negative"]}
+{"id":"default-cross-agent-005","text":"打电话 13641194007","agent_profile_id":"default","expected":{"mode":"chat","intent":"general"},"tags":["cross_agent","phone_negative"]}
