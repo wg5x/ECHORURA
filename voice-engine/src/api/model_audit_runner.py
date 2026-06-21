@@ -58,10 +58,7 @@ class OpenAICompatibleJsonClient:
         with urllib.request.urlopen(request, timeout=60) as response:
             body = json.loads(response.read().decode("utf-8"))
         content = body["choices"][0]["message"]["content"]
-        parsed = json.loads(content)
-        if not isinstance(parsed, dict):
-            raise ValueError("Model response must be a JSON object.")
-        return parsed
+        return _parse_json_object_from_text(content)
 
 
 def generate_router_model_decisions(cases, client: JsonModelClient, out_path: Path, limit: int | None = None) -> Path:
@@ -141,8 +138,18 @@ def main(argv: list[str] | None = None) -> None:
 
 def _router_prompt(case) -> str:
     return (
-        "Label this voice command for semantic routing. "
-        "Return JSON with fields mode and intent, and optional scenario_id/scenario_intent.\n"
+        "Label this voice command for semantic routing.\n"
+        "Return one JSON object using only this schema:\n"
+        "{\"mode\":\"chat|scenario|native_action|server_action|clarify|reject\","
+        "\"intent\":\"...\","
+        "\"scenario_id\":\"optional\","
+        "\"scenario_intent\":\"optional\"}\n"
+        "Allowed intents include: general, phone.dial, sms.compose, calendar.create_event, app.open, app.search, "
+        "app.open_deep_link, browser.open_url, gallery.pick_image, media.play_from_search, settings.open_wifi, "
+        "camera.capture_photo, camera.capture_video, memory.preference.update, create_song, revise_song, publish_work.\n"
+        "Use mode=native_action for Android-like phone actions. Use mode=chat and intent=general for ordinary chat. "
+        "Use mode=server_action and intent=memory.preference.update only for explicit remember/update preference requests. "
+        "Do not invent labels.\n"
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"text: {case.text}"
     )
@@ -155,6 +162,38 @@ def _memory_prompt(case) -> str:
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"transcript: {json.dumps(case.transcript, ensure_ascii=False)}"
     )
+
+
+def _parse_json_object_from_text(text: str) -> dict:
+    text = str(text or "").strip()
+    if not text:
+        raise ValueError("Model response content is empty.")
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError:
+        pass
+
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+        try:
+            parsed = json.loads(text)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        parsed = json.loads(text[start : end + 1])
+        if isinstance(parsed, dict):
+            return parsed
+
+    raise ValueError("Model response must contain one JSON object.")
 
 
 if __name__ == "__main__":

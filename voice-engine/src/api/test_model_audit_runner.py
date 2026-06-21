@@ -7,6 +7,7 @@ from pathlib import Path
 
 from api.memory_eval_runner import load_eval_cases as load_memory_eval_cases
 from api.model_audit_runner import generate_memory_model_memories, generate_router_model_decisions
+from api.model_audit_runner import _parse_json_object_from_text
 from api.semantic_router.eval_runner import load_eval_cases as load_router_eval_cases
 
 
@@ -60,6 +61,10 @@ class ModelAuditRunnerTest(unittest.TestCase):
             record = json.loads(out_path.read_text(encoding="utf-8"))
             self.assertEqual(record["case_id"], "memory-001")
             self.assertEqual(record["memories"][0]["content"], "我喜欢女声")
+
+    def test_parse_json_object_from_markdown_or_prose(self) -> None:
+        self.assertEqual(_parse_json_object_from_text('```json\n{"mode":"chat"}\n```'), {"mode": "chat"})
+        self.assertEqual(_parse_json_object_from_text('结果如下：{"memories":[]}'), {"memories": []})
 
 
 class _FakeModelClient:
