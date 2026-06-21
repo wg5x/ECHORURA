@@ -42,6 +42,56 @@ class MockActionExecutorTest(unittest.TestCase):
         self.assertEqual(result["summary"], "准备通过微信给张三发送：我到了")
         self.assertTrue(result["requires_native_bridge"])
         self.assertTrue(result["requires_confirmation"])
+        self.assertEqual(
+            result["mock_request"],
+            {
+                "adapter": "native_bridge",
+                "action": "app_deep_link_or_accessibility",
+                "app_name": "微信",
+                "contact_name": "张三",
+                "message_text": "我到了",
+            },
+        )
+
+    def test_sms_compose_includes_android_intent_mock_request(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-sms",
+            "发短信告诉他我晚点到",
+            agent_profile_id="phone-assistant",
+        )
+
+        result = execute_mock_action(decision)
+
+        self.assertEqual(result["intent"], "sms.compose")
+        self.assertEqual(
+            result["mock_request"],
+            {
+                "adapter": "android_intent",
+                "action": "android.intent.action.SENDTO",
+                "extras": {"message_text": "告诉他我晚点到"},
+            },
+        )
+
+    def test_gallery_pick_image_includes_android_intent_mock_request(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-gallery",
+            "打开相册",
+            agent_profile_id="phone-assistant",
+        )
+
+        result = execute_mock_action(decision)
+
+        self.assertEqual(result["intent"], "gallery.pick_image")
+        self.assertEqual(
+            result["mock_request"],
+            {
+                "adapter": "android_intent",
+                "action": "android.intent.action.PICK",
+                "extras": {"media_type": "image"},
+            },
+        )
 
     def test_executes_chat_as_noop_result(self) -> None:
         decision = self.router.route_text(
@@ -56,6 +106,7 @@ class MockActionExecutorTest(unittest.TestCase):
         self.assertEqual(result["result_type"], "noop")
         self.assertEqual(result["status"], "skipped")
         self.assertEqual(result["summary"], "当前路由结果不需要执行原生动作。")
+        self.assertIsNone(result["mock_request"])
 
 
 class MockActionExecutorHttpTest(unittest.TestCase):

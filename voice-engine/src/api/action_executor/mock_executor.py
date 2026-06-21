@@ -23,6 +23,7 @@ def execute_mock_action(route_decision: dict[str, Any]) -> ActionResult:
         "summary": _summary_for_intent(intent, arguments),
         "requires_confirmation": bool(route_decision.get("requires_confirmation")),
         "requires_native_bridge": _requires_native_bridge(intent, arguments),
+        "mock_request": _mock_request_for_intent(intent, arguments),
         "arguments": arguments,
     }
     return result
@@ -76,3 +77,29 @@ def _requires_native_bridge(intent: str, arguments: dict[str, Any]) -> bool:
     if arguments.get("android_action") or arguments.get("android_launcher"):
         return False
     return False
+
+
+def _mock_request_for_intent(intent: str, arguments: dict[str, Any]) -> dict[str, Any] | None:
+    if intent == "app.open_deep_link":
+        return {
+            "adapter": "native_bridge",
+            "action": str(arguments.get("android_launcher") or "app_deep_link_or_accessibility"),
+            "app_name": str(arguments.get("app_name") or ""),
+            "contact_name": str(arguments.get("contact_name") or ""),
+            "message_text": str(arguments.get("message_text") or ""),
+        }
+    if intent in {"sms.compose", "gallery.pick_image"}:
+        action = str(arguments.get("android_action") or "")
+        if not action:
+            return None
+        extras = {
+            key: arguments[key]
+            for key in ("message_text", "media_type")
+            if key in arguments
+        }
+        return {
+            "adapter": "android_intent",
+            "action": action,
+            "extras": extras,
+        }
+    return None
