@@ -259,6 +259,29 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["intent"], "camera.capture_video")
         self.assertEqual(decision["arguments"]["media_type"], "video")
 
+    def test_phone_assistant_routes_explicit_memory_preference_update(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-memory",
+            "记住我不喜欢男声",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "server_action")
+        self.assertEqual(decision["intent"], "memory.preference.update")
+        self.assertEqual(decision["arguments"]["memory_content"], "我不喜欢男声")
+
+    def test_phone_assistant_keeps_implicit_preference_as_chat(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-phone-memory-implicit",
+            "我不喜欢男声",
+            agent_profile_id="phone-assistant",
+        )
+
+        self.assertEqual(decision["mode"], "chat")
+        self.assertEqual(decision["intent"], "general")
+
     def test_decision_can_be_serialized_for_cli_output(self) -> None:
         decision = self.router.route_text("session-1", "turn-7", "打开作品页")
 

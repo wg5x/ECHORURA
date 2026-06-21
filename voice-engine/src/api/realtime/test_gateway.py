@@ -1,6 +1,8 @@
 import asyncio
 import json
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 from ..integrations.volc.frames import ServerFrame
 from .gateway import (
@@ -221,6 +223,168 @@ class GatewayDebugLogTest(unittest.TestCase):
         self.assertEqual(messages[0]["message"], "实时语音会话已空闲超时。请重新开始通话后直接说话，或使用下方文本测试。")
         self.assertEqual(messages[1], {"type": "status", "status": "idle"})
 
+    def test_start_message_injects_memory_context_into_system_role(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+        gateway.memory_store = _FakeMemoryStore(
+            context={
+                "agent_profile_id": "phone-assistant",
+                "memories": [{"content": "我喜欢女声"}],
+                "system_role_text": "长期记忆：\n- 我喜欢女声",
+            }
+        )
+        started_sessions: list[dict] = []
+
+        async def capture_start(session: dict) -> None:
+            started_sessions.append(session)
+
+        gateway._start_volc_session = capture_start
+
+        with patch("api.realtime.gateway.has_volc_credentials", return_value=True):
+            asyncio.run(
+                gateway._handle_text(
+                    json.dumps(
+                        {
+                            "type": "start",
+                            "agent_profile_id": "phone-assistant",
+                            "config": {"systemRole": "你是手机助手。"},
+                        },
+                        ensure_ascii=False,
+                    )
+                )
+            )
+
+        self.assertEqual(gateway.memory_store.context_requests, ["phone-assistant"])
+        self.assertEqual(gateway.memory_context["memories"][0]["content"], "我喜欢女声")
+        self.assertEqual(started_sessions[0]["config"]["systemRole"], "你是手机助手。\n\n长期记忆：\n- 我喜欢女声")
+
+    def test_send_json_records_transcript_and_route_to_conversation_store(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+        conversation_store = _FakeConversationStore()
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(
+            gateway._send_json(
+                {
+                    "type": "transcript_event",
+                    "session_id": "session-1",
+                    "turn_id": "turn-1",
+                    "role": "user",
+                    "text": "记住我喜欢女声",
+                    "source": "doubao_s2s",
+                    "output_id": "user-output-1",
+                    "at": "10:00:00",
+                }
+            )
+        )
+        asyncio.run(
+            gateway._send_json(
+                {
+                    "type": "route_decision",
+                    "session_id": "session-1",
+                    "turn_id": "turn-1",
+                    "agent_profile_id": "phone-assistant",
+                    "mode": "chat",
+                    "intent": "general",
+                }
+            )
+        )
+
+        self.assertEqual(conversation_store.transcripts[0]["text"], "记住我喜欢女声")
+        self.assertEqual(conversation_store.route_decisions[0]["intent"], "general")
+
+    def test_handle_binary_records_input_audio_to_conversation_store(self) -> None:
+        gateway = RealtimeGateway(_FakeClientWebSocket())
+        gateway.session_id = "session-1"
+        gateway.upstream = _FakeUpstream()
+        conversation_store = _FakeConversationStore()
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(gateway._handle_binary(b"\x01\x02"))
+
+        self.assertEqual(conversation_store.input_audio, [b"\x01\x02"])
+
+    def test_close_finalizes_conversation_and_persists_memory(self) -> None:
+        gateway = RealtimeGateway(_FakeClientWebSocket())
+        gateway.session_id = "session-1"
+        gateway.agent_profile_id = "phone-assistant"
+        gateway.memory_store = _FakeMemoryStore()
+        conversation_store = _FakeConversationStore(
+            transcripts=[
+                {"role": "user", "text": "记住我喜欢女声"},
+                {"role": "assistant", "text": "好的，我记住了。"},
+            ]
+        )
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(gateway._close_upstream())
+
+        self.assertEqual(
+            gateway.memory_store.extraction_requests,
+            [
+                (
+                    "session-1",
+                    "phone-assistant",
+                    [
+                        {"role": "user", "text": "记住我喜欢女声"},
+                        {"role": "assistant", "text": "好的，我记住了。"},
+                    ],
+                )
+            ],
+        )
+        self.assertEqual(conversation_store.finalized_with["accepted_source"], "rule")
+
+    def test_start_volc_session_creates_conversation_store_with_memory_context(self) -> None:
+        gateway = RealtimeGateway(_FakeClientWebSocket())
+        gateway.agent_profile_id = "phone-assistant"
+        gateway.memory_context = {
+            "agent_profile_id": "phone-assistant",
+            "memories": [{"content": "我喜欢女声"}],
+            "system_role_text": "长期记忆：\n- 我喜欢女声",
+        }
+        created: list[dict] = []
+
+        class CapturingConversationStore(_FakeConversationStore):
+            def __init__(
+                self,
+                base_dir: Path,
+                session_id: str,
+                agent_profile_id: str,
+                config: dict,
+                memory_context: dict,
+            ) -> None:
+                super().__init__()
+                created.append(
+                    {
+                        "base_dir": base_dir,
+                        "session_id": session_id,
+                        "agent_profile_id": agent_profile_id,
+                        "config": config,
+                        "memory_context": memory_context,
+                    }
+                )
+
+        with (
+            patch("api.realtime.gateway.ConversationStore", CapturingConversationStore),
+            patch("api.realtime.gateway.get_conversations_dir", return_value=Path("/tmp/conversations")),
+            patch("api.realtime.gateway.websockets.connect", side_effect=RuntimeError("offline")),
+        ):
+            asyncio.run(
+                gateway._start_volc_session(
+                    {
+                        "payload": {"dialog": {"system_role": "你是手机助手。"}},
+                        "warnings": [],
+                        "config": {"systemRole": "你是手机助手。"},
+                    }
+                )
+            )
+
+        self.assertEqual(created[0]["base_dir"], Path("/tmp/conversations"))
+        self.assertEqual(created[0]["agent_profile_id"], "phone-assistant")
+        self.assertEqual(created[0]["config"]["systemRole"], "你是手机助手。")
+        self.assertEqual(created[0]["memory_context"]["memories"][0]["content"], "我喜欢女声")
+
 
 class _FakeClientWebSocket:
     def __init__(self) -> None:
@@ -236,6 +400,63 @@ class _FakeDebugLogger:
 
     def record(self, kind: str, payload: dict[str, str]) -> None:
         self.records.append((kind, payload))
+
+
+class _FakeUpstream:
+    def __init__(self) -> None:
+        self.sent: list[bytes] = []
+
+    async def send(self, payload: bytes) -> None:
+        self.sent.append(payload)
+
+
+class _FakeConversationStore:
+    def __init__(self, transcripts: list[dict] | None = None) -> None:
+        self.transcripts = transcripts or []
+        self.route_decisions: list[dict] = []
+        self.input_audio: list[bytes] = []
+        self.output_audio: list[bytes] = []
+        self.finalized_with: dict | None = None
+
+    def write_input_audio(self, pcm: bytes) -> None:
+        self.input_audio.append(pcm)
+
+    def write_output_audio(self, pcm: bytes) -> None:
+        self.output_audio.append(pcm)
+
+    def record_transcript(self, event: dict) -> None:
+        self.transcripts.append(event)
+
+    def record_route_decision(self, decision: dict) -> None:
+        self.route_decisions.append(decision)
+
+    def read_transcript(self) -> list[dict]:
+        return self.transcripts
+
+    def finalize(self, memory_extraction: dict | None = None) -> None:
+        self.finalized_with = memory_extraction or {}
+
+
+class _FakeMemoryStore:
+    def __init__(self, context: dict | None = None) -> None:
+        self.context = context or {"agent_profile_id": "phone-assistant", "memories": [], "system_role_text": ""}
+        self.context_requests: list[str] = []
+        self.extraction_requests: list[tuple[str, str, list[dict]]] = []
+
+    def build_memory_context(self, agent_profile_id: str) -> dict:
+        self.context_requests.append(agent_profile_id)
+        return self.context
+
+    def extract_compare_and_persist(self, session_id: str, agent_profile_id: str, transcript: list[dict]) -> dict:
+        self.extraction_requests.append((session_id, agent_profile_id, transcript))
+        return {
+            "session_id": session_id,
+            "agent_profile_id": agent_profile_id,
+            "accepted_source": "rule",
+            "rule": {"status": "ok", "memories": [{"content": "我喜欢女声"}]},
+            "model": {"status": "not_configured", "memories": []},
+            "diff": [{"field": "memories", "rule": ["我喜欢女声"], "model": []}],
+        }
 
 
 if __name__ == "__main__":

@@ -72,6 +72,8 @@ def _extract_arguments(capability: Capability, raw_text: str, normalized_text: s
         return {"media_type": "image"}
     if capability.id == "native.camera.capture_video":
         return {"media_type": "video"}
+    if capability.id == "server.memory.preference_update":
+        return _extract_memory_update_arguments(raw_text)
     if capability.id == "music_creation.create_song":
         return _extract_create_song_arguments(raw_text, normalized_text)
     if capability.id == "music_creation.revise_song":
@@ -186,6 +188,25 @@ def _extract_browser_open_url_arguments(raw_text: str) -> dict[str, str]:
 def _extract_media_play_arguments(raw_text: str, normalized_text: str) -> dict[str, str]:
     media_type = "video" if any(marker in normalized_text for marker in ("视频", "电影")) else "audio"
     return {"media_type": media_type, "query": raw_text.strip()}
+
+
+def _extract_memory_update_arguments(raw_text: str) -> dict[str, str]:
+    text = raw_text.strip()
+    patterns = (
+        r"^(?:请你)?记住(.+)$",
+        r"^以后你要记得(.+)$",
+        r"^我的偏好是(.+)$",
+        r"^(?:以后)?(?:不要|别)再?(.+)$",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if not match:
+            continue
+        content = match.group(1).strip(" ，。,.")
+        if pattern.startswith("^(?:以后)?") and content:
+            content = f"不要{content}"
+        return {"memory_content": content} if content else {}
+    return {"memory_content": text} if text else {}
 
 
 def _first_match_text(text: str, patterns: tuple[str, ...]) -> str:

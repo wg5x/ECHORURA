@@ -14,7 +14,9 @@ import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 
 from ..config import (
+    get_conversations_dir,
     get_debug_events_dir,
+    get_memories_dir,
     get_recordings_dir,
     get_volc_headers,
     get_volc_ws_url,
@@ -22,9 +24,11 @@ from ..config import (
     is_realtime_debug_log_enabled,
     is_voice_recording_enabled,
 )
+from ..conversation_store import ConversationStore
 from ..integrations.volc.events import CLIENT_EVENTS, SERVER_EVENTS
 from ..integrations.volc.frames import ServerFrame, make_audio_frame, make_json_frame, parse_server_frame
 from ..integrations.volc.payload import build_start_session_payload, redact_payload
+from ..memory_store import LongTermMemoryStore
 from ..semantic_router import SemanticRouter
 from .debug_log import RealtimeDebugLogger
 from .recording import LocalSessionRecorder
@@ -49,6 +53,9 @@ class RealtimeGateway:
         self.current_user_text = ""
         self.recorder: LocalSessionRecorder | None = None
         self.debug_logger: RealtimeDebugLogger | None = None
+        self.conversation_store: ConversationStore | None = None
+        self.memory_store = LongTermMemoryStore(get_memories_dir())
+        self.memory_context: dict[str, Any] = {"memories": [], "system_role_text": ""}
         self.semantic_router = SemanticRouter()
         self.agent_profile_id = "default"
         self.session_started_at = 0.0
@@ -79,6 +86,8 @@ class RealtimeGateway:
         try:
             if self.recorder:
                 self.recorder.write_input(raw)
+            if self.conversation_store:
+                self.conversation_store.write_input_audio(raw)
             await self.upstream.send(make_audio_frame(CLIENT_EVENTS["TASK_REQUEST"], raw, self.session_id))
         except Exception:
             await self._send_json({"type": "error", "message": "发送音频到火山实时语音失败。"})
@@ -100,7 +109,9 @@ class RealtimeGateway:
                 return
 
             try:
-                session = build_start_session_payload(message.get("config") or {})
+                self.memory_context = self.memory_store.build_memory_context(self.agent_profile_id)
+                config = _inject_memory_context(message.get("config") or {}, self.memory_context)
+                session = build_start_session_payload(config)
             except Exception as exc:
                 await self._send_json({"type": "error", "message": str(exc) or "StartSession 配置无效。"})
                 return
@@ -141,6 +152,13 @@ class RealtimeGateway:
         self.session_started_at = time.monotonic()
         self.first_output_audio_at = 0.0
         self.recorder = LocalSessionRecorder(is_voice_recording_enabled(), get_recordings_dir(), self.session_id)
+        self.conversation_store = ConversationStore(
+            base_dir=get_conversations_dir(),
+            session_id=self.session_id,
+            agent_profile_id=self.agent_profile_id,
+            config=session["config"],
+            memory_context=self.memory_context,
+        )
         self._record_debug(
             "start_session",
             {
@@ -222,6 +240,8 @@ class RealtimeGateway:
                 if frame.event == SERVER_EVENTS["TTS_RESPONSE"] and isinstance(frame.payload, bytes):
                     if self.recorder:
                         self.recorder.write_output(frame.payload)
+                    if self.conversation_store:
+                        self.conversation_store.write_output_audio(frame.payload)
                     if not self.first_output_audio_at:
                         self.first_output_audio_at = time.monotonic()
                         self._record_debug(
@@ -253,6 +273,7 @@ class RealtimeGateway:
                     continue
 
                 if frame.event in (SERVER_EVENTS["SESSION_FINISHED"], SERVER_EVENTS["CONNECTION_FINISHED"]):
+                    self._finalize_conversation()
                     self.session_id = ""
                     self.upstream_ready = False
                     await self._send_json({"type": "status", "status": "idle", "warnings": warnings})
@@ -267,6 +288,7 @@ class RealtimeGateway:
         finally:
             if self.upstream is upstream:
                 self.upstream = None
+            self._finalize_conversation()
             self.session_id = ""
             self.upstream_ready = False
 
@@ -306,6 +328,7 @@ class RealtimeGateway:
         self.closing_upstream = True
         upstream = self.upstream
         self.upstream = None
+        self._finalize_conversation()
         self.session_id = ""
         self.upstream_ready = False
         self._close_recorder()
@@ -333,6 +356,21 @@ class RealtimeGateway:
         if self.recorder:
             self.recorder.close()
             self.recorder = None
+
+    def _finalize_conversation(self) -> None:
+        if not self.conversation_store:
+            return
+        transcript = self.conversation_store.read_transcript()
+        session_id = self.session_id or getattr(self.conversation_store, "session_id", "")
+        memory_extraction = None
+        if session_id:
+            memory_extraction = self.memory_store.extract_compare_and_persist(
+                session_id=session_id,
+                agent_profile_id=self.agent_profile_id,
+                transcript=transcript,
+            )
+        self.conversation_store.finalize(memory_extraction=memory_extraction)
+        self.conversation_store = None
 
     def _next_assistant_output_id(self) -> str:
         self.assistant_output_seq += 1
@@ -456,6 +494,8 @@ class RealtimeGateway:
             )
             return
         if payload_type == "transcript_event":
+            if self.conversation_store:
+                self.conversation_store.record_transcript(payload)
             self._record_debug(
                 "transcript_event",
                 {
@@ -466,6 +506,8 @@ class RealtimeGateway:
             )
             return
         if payload_type == "route_decision":
+            if self.conversation_store:
+                self.conversation_store.record_route_decision(payload)
             self._record_debug(
                 "route_decision",
                 {
@@ -495,6 +537,17 @@ def _extract_asr_text(payload: dict[str, Any]) -> str:
         return ""
     texts = [str(item.get("text") or "") for item in results if isinstance(item, dict) and item.get("text")]
     return texts[-1] if texts else ""
+
+
+def _inject_memory_context(raw_config: dict[str, Any], memory_context: dict[str, Any]) -> dict[str, Any]:
+    config = dict(raw_config)
+    memory_text = str(memory_context.get("system_role_text") or "").strip()
+    if not memory_text:
+        return config
+
+    system_role = str(config.get("systemRole") or "").strip()
+    config["systemRole"] = f"{system_role}\n\n{memory_text}" if system_role else memory_text
+    return config
 
 
 def _make_event(event_type: str, text: str, output_id: str | None = None) -> dict[str, str]:

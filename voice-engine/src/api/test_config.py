@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 from .config import (
     SRC_DIR,
+    get_conversations_dir,
     get_debug_events_dir,
+    get_memories_dir,
     get_recordings_dir,
     is_realtime_debug_log_enabled,
     is_voice_recording_enabled,
@@ -44,6 +46,22 @@ class RecordingConfigTest(unittest.TestCase):
     def test_debug_events_absolute_dir_is_preserved(self) -> None:
         with patch.dict(os.environ, {"VOICE_DEBUG_LOG_DIR": "/tmp/voice-engine-debug-events"}, clear=True):
             self.assertEqual(get_debug_events_dir(), Path("/tmp/voice-engine-debug-events"))
+
+    def test_conversations_relative_dir_is_resolved_under_src_dir(self) -> None:
+        with patch.dict(os.environ, {"VOICE_CONVERSATIONS_DIR": "data/conversations"}, clear=True):
+            self.assertEqual(get_conversations_dir(), SRC_DIR / "data" / "conversations")
+
+    def test_conversations_absolute_dir_is_preserved(self) -> None:
+        with patch.dict(os.environ, {"VOICE_CONVERSATIONS_DIR": "/tmp/voice-engine-conversations"}, clear=True):
+            self.assertEqual(get_conversations_dir(), Path("/tmp/voice-engine-conversations"))
+
+    def test_memories_relative_dir_is_resolved_under_src_dir(self) -> None:
+        with patch.dict(os.environ, {"VOICE_MEMORIES_DIR": "data/memories"}, clear=True):
+            self.assertEqual(get_memories_dir(), SRC_DIR / "data" / "memories")
+
+    def test_memories_absolute_dir_is_preserved(self) -> None:
+        with patch.dict(os.environ, {"VOICE_MEMORIES_DIR": "/tmp/voice-engine-memories"}, clear=True):
+            self.assertEqual(get_memories_dir(), Path("/tmp/voice-engine-memories"))
 
 
 if __name__ == "__main__":

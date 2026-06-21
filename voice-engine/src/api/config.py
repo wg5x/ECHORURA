@@ -15,6 +15,8 @@ DEFAULT_VOLC_RESOURCE_ID = "volc.speech.dialog"
 PUBLIC_APP_KEY = "PlgvMymc7f3tQnJ6"
 DEFAULT_RECORDINGS_DIR = SRC_DIR / "data" / "recordings"
 DEFAULT_DEBUG_EVENTS_DIR = SRC_DIR / "data" / "debug-events"
+DEFAULT_CONVERSATIONS_DIR = SRC_DIR / "data" / "conversations"
+DEFAULT_MEMORIES_DIR = SRC_DIR / "data" / "memories"
 
 ENV_FILES = (
     SRC_DIR / ".env.local",
@@ -77,4 +79,14 @@ def is_realtime_debug_log_enabled() -> bool:
 
 def get_debug_events_dir() -> Path:
     configured_dir = Path(os.environ.get("VOICE_DEBUG_LOG_DIR") or DEFAULT_DEBUG_EVENTS_DIR)
+    return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir
+
+
+def get_conversations_dir() -> Path:
+    configured_dir = Path(os.environ.get("VOICE_CONVERSATIONS_DIR") or DEFAULT_CONVERSATIONS_DIR)
+    return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir
+
+
+def get_memories_dir() -> Path:
+    configured_dir = Path(os.environ.get("VOICE_MEMORIES_DIR") or DEFAULT_MEMORIES_DIR)
     return configured_dir if configured_dir.is_absolute() else SRC_DIR / configured_dir

@@ -175,6 +175,13 @@ def default_capability_configs() -> list[CapabilityConfig]:
             arguments={"android_launcher": "getLaunchIntentForPackage"},
         ),
         CapabilityConfig(
+            id="server.memory.preference_update",
+            mode="server_action",
+            intent="memory.preference.update",
+            keywords=("记住", "请你记住", "以后你要记得", "我的偏好是", "不要再", "别再", "以后不要", "以后别"),
+            confidence=0.82,
+        ),
+        CapabilityConfig(
             id="music_creation.create_song",
             mode="scenario",
             intent="create_song",

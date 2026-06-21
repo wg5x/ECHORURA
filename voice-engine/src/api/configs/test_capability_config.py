@@ -12,6 +12,7 @@ class CapabilityConfigTest(unittest.TestCase):
         self.assertIn("music_creation.revise_song", capability_ids)
         self.assertIn("music_creation.publish_work", capability_ids)
         self.assertIn("native.open_page", capability_ids)
+        self.assertIn("server.memory.preference_update", capability_ids)
         self.assertIn("chat.general", capability_ids)
 
     def test_default_config_ids_are_unique(self) -> None:
@@ -24,6 +25,12 @@ class CapabilityConfigTest(unittest.TestCase):
         configs = {config.id: config for config in default_capability_configs()}
 
         self.assertTrue(configs["music_creation.publish_work"].requires_confirmation)
+
+    def test_memory_preference_update_is_server_action(self) -> None:
+        configs = {config.id: config for config in default_capability_configs()}
+
+        self.assertEqual(configs["server.memory.preference_update"].mode, "server_action")
+        self.assertEqual(configs["server.memory.preference_update"].intent, "memory.preference.update")
 
 
 if __name__ == "__main__":

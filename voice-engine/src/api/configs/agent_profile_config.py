@@ -51,6 +51,7 @@ def default_agent_profile_configs() -> list[AgentProfileConfig]:
                 "native.settings.open_wifi",
                 "native.camera.capture_photo",
                 "native.camera.capture_video",
+                "server.memory.preference_update",
                 "chat.general",
             ),
             routing_policy={"fallback_mode": "chat"},

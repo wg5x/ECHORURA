@@ -58,6 +58,7 @@ class AgentProfileConfigTest(unittest.TestCase):
                 "native.settings.open_wifi",
                 "native.camera.capture_photo",
                 "native.camera.capture_video",
+                "server.memory.preference_update",
                 "chat.general",
             ),
         )
