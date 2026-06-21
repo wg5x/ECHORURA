@@ -247,6 +247,7 @@ class GatewayDebugLogTest(unittest.TestCase):
                         {
                             "type": "start",
                             "agent_profile_id": "phone-assistant",
+                            "memory_session_ids": ["session-b", "session-a"],
                             "config": {"systemRole": "你是手机助手。"},
                         },
                         ensure_ascii=False,
@@ -254,8 +255,9 @@ class GatewayDebugLogTest(unittest.TestCase):
                 )
             )
 
-        self.assertEqual(gateway.memory_store.context_requests, ["phone-assistant"])
+        self.assertEqual(gateway.memory_store.context_requests, [("phone-assistant", ["session-b", "session-a"])])
         self.assertEqual(gateway.memory_context["memories"][0]["content"], "我喜欢女声")
+        self.assertEqual(gateway.memory_context["session_ids"], ["session-b", "session-a"])
         self.assertEqual(started_sessions[0]["config"]["systemRole"], "你是手机助手。\n\n长期记忆：\n- 我喜欢女声")
 
     def test_send_json_records_transcript_and_route_to_conversation_store(self) -> None:
@@ -439,13 +441,19 @@ class _FakeConversationStore:
 
 class _FakeMemoryStore:
     def __init__(self, context: dict | None = None) -> None:
-        self.context = context or {"agent_profile_id": "phone-assistant", "memories": [], "system_role_text": ""}
-        self.context_requests: list[str] = []
+        self.context = context or {
+            "agent_profile_id": "phone-assistant",
+            "session_ids": [],
+            "memories": [],
+            "system_role_text": "",
+        }
+        self.context_requests: list[tuple[str, list[str]]] = []
         self.extraction_requests: list[tuple[str, str, list[dict]]] = []
 
-    def build_memory_context(self, agent_profile_id: str) -> dict:
-        self.context_requests.append(agent_profile_id)
-        return self.context
+    def build_memory_context(self, agent_profile_id: str, session_ids: list[str] | None = None) -> dict:
+        session_ids = session_ids or []
+        self.context_requests.append((agent_profile_id, session_ids))
+        return {**self.context, "session_ids": session_ids}
 
     def extract_compare_and_persist(self, session_id: str, agent_profile_id: str, transcript: list[dict]) -> dict:
         self.extraction_requests.append((session_id, agent_profile_id, transcript))

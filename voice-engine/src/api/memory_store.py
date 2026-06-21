@@ -103,11 +103,21 @@ class LongTermMemoryStore:
         self._append_memories(agent_profile_id, rule_memories)
         return extraction
 
-    def build_memory_context(self, agent_profile_id: str, limit: int = 8) -> dict:
-        memories = self.load_memories(agent_profile_id)[-limit:]
+    def build_memory_context(
+        self,
+        agent_profile_id: str,
+        session_ids: list[str] | None = None,
+        limit: int = 8,
+    ) -> dict:
+        session_ids = _sanitize_ids(session_ids or [])
+        memories = _dedupe_memories(
+            [*self.load_memories(agent_profile_id), *self.load_session_memories(agent_profile_id, session_ids)]
+        )
+        memories = memories[-limit:]
         lines = [f"- {memory['content']}" for memory in memories if memory.get("content")]
         return {
             "agent_profile_id": agent_profile_id,
+            "session_ids": session_ids,
             "memories": memories,
             "system_role_text": "长期记忆：\n" + "\n".join(lines) if lines else "",
         }
@@ -125,10 +135,45 @@ class LongTermMemoryStore:
         with self._memory_file(agent_profile_id).open("a", encoding="utf-8") as file:
             for memory in memories:
                 file.write(json.dumps(memory, ensure_ascii=False, separators=(",", ":")) + "\n")
+        self.save_session_memories(
+            session_id=str(memories[0].get("session_id") or ""),
+            agent_profile_id=agent_profile_id,
+            memories=memories,
+        )
+
+    def save_session_memories(self, session_id: str, agent_profile_id: str, memories: list[dict]) -> None:
+        session_id = _safe_id(session_id)
+        if not session_id or not memories:
+            return
+        self._session_memory_dir().mkdir(parents=True, exist_ok=True)
+        with self._session_memory_file(session_id).open("a", encoding="utf-8") as file:
+            for memory in memories:
+                if memory.get("agent_profile_id") != agent_profile_id:
+                    continue
+                file.write(json.dumps(memory, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+    def load_session_memories(self, agent_profile_id: str, session_ids: list[str]) -> list[dict]:
+        memories: list[dict] = []
+        for session_id in _sanitize_ids(session_ids):
+            path = self._session_memory_file(session_id)
+            if not path.exists():
+                continue
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                memory = json.loads(line)
+                if memory.get("agent_profile_id") == agent_profile_id:
+                    memories.append(memory)
+        return memories
 
     def _memory_file(self, agent_profile_id: str) -> Path:
-        safe_id = re.sub(r"[^a-zA-Z0-9_.-]", "_", agent_profile_id or "default")
-        return self.base_dir / f"{safe_id}.jsonl"
+        return self.base_dir / f"{_safe_id(agent_profile_id or 'default')}.jsonl"
+
+    def _session_memory_dir(self) -> Path:
+        return self.base_dir / "sessions"
+
+    def _session_memory_file(self, session_id: str) -> Path:
+        return self._session_memory_dir() / f"{_safe_id(session_id)}.jsonl"
 
 
 def _diff_memories(rule_memories: list[dict], model_memories: list[dict]) -> list[dict]:
@@ -141,3 +186,32 @@ def _diff_memories(rule_memories: list[dict], model_memories: list[dict]) -> lis
 
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def _sanitize_ids(ids: list[str]) -> list[str]:
+    result: list[str] = []
+    for raw_id in ids:
+        safe_id = _safe_id(str(raw_id or ""))
+        if safe_id:
+            result.append(safe_id)
+    return result
+
+
+def _safe_id(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_.-]", "_", value).strip("_")
+
+
+def _dedupe_memories(memories: list[dict]) -> list[dict]:
+    seen: set[tuple[str, str, str]] = set()
+    deduped: list[dict] = []
+    for memory in memories:
+        key = (
+            str(memory.get("agent_profile_id") or ""),
+            str(memory.get("session_id") or ""),
+            str(memory.get("content") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(memory)
+    return deduped

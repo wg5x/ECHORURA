@@ -68,6 +68,66 @@ class MemoryStoreTest(unittest.TestCase):
             self.assertEqual(memory_records[0]["content"], "我喜欢女声")
             self.assertIn("我喜欢女声", context["system_role_text"])
 
+    def test_build_memory_context_combines_global_and_selected_session_memories(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            store = LongTermMemoryStore(base_dir=Path(temp_dir))
+            store.extract_compare_and_persist(
+                session_id="global-session",
+                agent_profile_id="phone-assistant",
+                transcript=[{"role": "user", "text": "记住我喜欢简短回答"}],
+            )
+            store.save_session_memories(
+                session_id="session-a",
+                agent_profile_id="phone-assistant",
+                memories=[
+                    {
+                        "session_id": "session-a",
+                        "agent_profile_id": "phone-assistant",
+                        "content": "我不喜欢男声",
+                        "source": "rule",
+                    }
+                ],
+            )
+            store.save_session_memories(
+                session_id="session-b",
+                agent_profile_id="phone-assistant",
+                memories=[
+                    {
+                        "session_id": "session-b",
+                        "agent_profile_id": "phone-assistant",
+                        "content": "我喜欢女声",
+                        "source": "rule",
+                    }
+                ],
+            )
+
+            context = store.build_memory_context(
+                agent_profile_id="phone-assistant",
+                session_ids=["session-b", "session-a"],
+            )
+
+            self.assertEqual(
+                [memory["content"] for memory in context["memories"]],
+                ["我喜欢简短回答", "我喜欢女声", "我不喜欢男声"],
+            )
+            self.assertEqual(context["session_ids"], ["session-b", "session-a"])
+
+    def test_build_memory_context_deduplicates_global_and_session_memories(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            store = LongTermMemoryStore(base_dir=Path(temp_dir))
+            store.extract_compare_and_persist(
+                session_id="session-a",
+                agent_profile_id="phone-assistant",
+                transcript=[{"role": "user", "text": "记住我喜欢女声"}],
+            )
+
+            context = store.build_memory_context(
+                agent_profile_id="phone-assistant",
+                session_ids=["session-a"],
+            )
+
+            self.assertEqual([memory["content"] for memory in context["memories"]], ["我喜欢女声"])
+
     def test_noop_model_extractor_records_not_configured_status(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             store = LongTermMemoryStore(base_dir=Path(temp_dir))

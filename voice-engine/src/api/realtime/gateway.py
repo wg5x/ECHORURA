@@ -109,7 +109,11 @@ class RealtimeGateway:
                 return
 
             try:
-                self.memory_context = self.memory_store.build_memory_context(self.agent_profile_id)
+                memory_session_ids = _extract_memory_session_ids(message)
+                self.memory_context = self.memory_store.build_memory_context(
+                    self.agent_profile_id,
+                    session_ids=memory_session_ids,
+                )
                 config = _inject_memory_context(message.get("config") or {}, self.memory_context)
                 session = build_start_session_payload(config)
             except Exception as exc:
@@ -548,6 +552,18 @@ def _inject_memory_context(raw_config: dict[str, Any], memory_context: dict[str,
     system_role = str(config.get("systemRole") or "").strip()
     config["systemRole"] = f"{system_role}\n\n{memory_text}" if system_role else memory_text
     return config
+
+
+def _extract_memory_session_ids(message: dict[str, Any]) -> list[str]:
+    raw_ids = message.get("memory_session_ids") or message.get("previous_session_ids") or []
+    if not isinstance(raw_ids, list):
+        return []
+    session_ids: list[str] = []
+    for raw_id in raw_ids:
+        session_id = str(raw_id or "").strip()
+        if session_id:
+            session_ids.append(session_id)
+    return session_ids
 
 
 def _make_event(event_type: str, text: str, output_id: str | None = None) -> dict[str, str]:
