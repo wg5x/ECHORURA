@@ -307,6 +307,18 @@ class GatewayDebugLogTest(unittest.TestCase):
 
         self.assertEqual(conversation_store.input_audio, [b"\x01\x02"])
 
+    def test_user_text_records_transcript_for_memory_extraction(self) -> None:
+        gateway = RealtimeGateway(_FakeClientWebSocket())
+        gateway.session_id = "session-1"
+        gateway.upstream = _FakeUpstream()
+        conversation_store = _FakeConversationStore()
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(gateway._handle_text(json.dumps({"type": "user_text", "text": "我喜欢女生"}, ensure_ascii=False)))
+
+        self.assertEqual(conversation_store.transcripts[0]["role"], "user")
+        self.assertEqual(conversation_store.transcripts[0]["text"], "我喜欢女生")
+
     def test_close_finalizes_conversation_and_persists_memory(self) -> None:
         gateway = RealtimeGateway(_FakeClientWebSocket())
         gateway.session_id = "session-1"

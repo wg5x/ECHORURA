@@ -128,6 +128,23 @@ class MemoryStoreTest(unittest.TestCase):
 
             self.assertEqual([memory["content"] for memory in context["memories"]], ["我喜欢女声"])
 
+    def test_later_session_can_use_user_preference_memory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            store = LongTermMemoryStore(base_dir=Path(temp_dir))
+            store.extract_compare_and_persist(
+                session_id="preference-session",
+                agent_profile_id="phone-assistant",
+                transcript=[{"role": "user", "text": "我喜欢女生"}],
+            )
+
+            context = store.build_memory_context(
+                agent_profile_id="phone-assistant",
+                session_ids=["preference-session"],
+            )
+
+            self.assertEqual([memory["content"] for memory in context["memories"]], ["我喜欢女生"])
+            self.assertEqual(context["system_role_text"], "长期记忆：\n- 我喜欢女生")
+
     def test_noop_model_extractor_records_not_configured_status(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             store = LongTermMemoryStore(base_dir=Path(temp_dir))

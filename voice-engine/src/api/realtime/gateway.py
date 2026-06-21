@@ -126,6 +126,7 @@ class RealtimeGateway:
         if message.get("type") == "user_text":
             text = str(message.get("text") or "").strip()
             if self.upstream and self.session_id and text:
+                self._record_user_text_input(text)
                 try:
                     await self.upstream.send(make_json_frame(CLIENT_EVENTS["CHAT_TEXT_QUERY"], {"content": text}, self.session_id))
                 except Exception:
@@ -425,6 +426,19 @@ class RealtimeGateway:
                 text=self.current_user_text,
                 source="doubao_s2s",
                 agent_profile_id=self.agent_profile_id,
+            )
+        )
+
+    def _record_user_text_input(self, text: str) -> None:
+        output_id = self._next_user_output_id()
+        self.current_user_text = text
+        self._record_client_debug(
+            _make_transcript_event(
+                session_id=self.session_id,
+                turn_id=output_id,
+                role="user",
+                text=text,
+                output_id=output_id,
             )
         )
 
