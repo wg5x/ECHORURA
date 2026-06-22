@@ -173,6 +173,17 @@ class MemoryEvalRunnerTest(unittest.TestCase):
         self.assertIn("memory-remember-001", ids)
         self.assertIn("memory-negative-001", ids)
 
+    def test_default_eval_dataset_treats_implicit_preferences_as_noop(self) -> None:
+        cases = load_eval_cases(default_eval_cases_path())
+        implicit_cases = [
+            case
+            for case in cases
+            if "implicit" in case.tags or "positive_preference" in case.tags or "negative_preference" in case.tags
+        ]
+
+        self.assertTrue(implicit_cases)
+        self.assertTrue(all(case.expected_contents == () for case in implicit_cases))
+
 
 def _write_jsonl(records: list[dict]) -> Path:
     handle = tempfile.NamedTemporaryFile("w", suffix=".jsonl", encoding="utf-8", delete=False)

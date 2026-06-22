@@ -159,6 +159,17 @@ class SemanticRouterTest(unittest.TestCase):
         self.assertEqual(decision["intent"], "app.open")
         self.assertEqual(decision["arguments"]["app_name"], "淘宝")
 
+    def test_default_profile_keeps_phone_app_open_as_chat(self) -> None:
+        decision = self.router.route_text(
+            "session-1",
+            "turn-default-4",
+            "打开淘宝",
+            agent_profile_id="default",
+        )
+
+        self.assertEqual(decision["mode"], "chat")
+        self.assertEqual(decision["intent"], "general")
+
     def test_phone_assistant_routes_app_search(self) -> None:
         decision = self.router.route_text(
             "session-1",

@@ -14,6 +14,20 @@ from api.semantic_router.eval_runner import load_eval_cases as load_router_eval_
 
 
 class ModelAuditRunnerTest(unittest.TestCase):
+    def test_openai_client_defaults_to_agnes_audit_model(self) -> None:
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "MODEL_AUDIT_API_KEY": "test-key",
+            },
+            clear=True,
+        ):
+            client = OpenAICompatibleJsonClient.from_env()
+
+        self.assertEqual(client.base_url, "https://apihub.agnes-ai.com/v1")
+        self.assertEqual(client.model, "agnes-2.0-flash")
+        self.assertEqual(client.api_key, "test-key")
+
     def test_generate_router_model_decisions_writes_eval_compatible_jsonl(self) -> None:
         cases = load_router_eval_cases(
             _write_jsonl(
@@ -35,6 +49,33 @@ class ModelAuditRunnerTest(unittest.TestCase):
 
             record = json.loads(out_path.read_text(encoding="utf-8"))
             self.assertEqual(record["case_id"], "router-001")
+            self.assertEqual(record["decision"], {"mode": "chat", "intent": "general"})
+
+    def test_generate_router_model_decisions_applies_policy_guard_and_preserves_raw_decision(self) -> None:
+        cases = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-default-app-001",
+                        "text": "打开淘宝",
+                        "agent_profile_id": "default",
+                        "expected": {"mode": "chat", "intent": "general"},
+                        "tags": ["cross_agent"],
+                    }
+                ]
+            )
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_path = Path(temp_dir) / "model_decisions.jsonl"
+
+            generate_router_model_decisions(
+                cases,
+                _FakeModelClient({"mode": "native_action", "intent": "app.open"}),
+                out_path,
+            )
+
+            record = json.loads(out_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["raw_decision"], {"mode": "native_action", "intent": "app.open"})
             self.assertEqual(record["decision"], {"mode": "chat", "intent": "general"})
 
     def test_generate_router_model_decisions_can_use_parallel_workers(self) -> None:
@@ -229,6 +270,27 @@ class ModelAuditRunnerTest(unittest.TestCase):
         self.assertIn("发出去", prompt)
         self.assertIn("publish_work", prompt)
 
+    def test_router_prompt_includes_default_music_create_example(self) -> None:
+        case = load_router_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "router-music-create-001",
+                        "text": "帮我做一首下班路上听的中文 LoFi",
+                        "agent_profile_id": "default",
+                        "expected": {"mode": "scenario", "intent": "create_song"},
+                        "tags": ["music"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _router_prompt(case)
+
+        self.assertIn("For default profile music creation", prompt)
+        self.assertIn("帮我做一首下班路上听的中文 LoFi", prompt)
+        self.assertIn("create_song", prompt)
+
     def test_memory_prompt_requires_verbatim_user_phrase(self) -> None:
         case = load_memory_eval_cases(
             _write_jsonl(
@@ -249,6 +311,28 @@ class ModelAuditRunnerTest(unittest.TestCase):
         self.assertIn("content must be copied verbatim", prompt)
         self.assertIn("Do not translate", prompt)
         self.assertIn("If there is no durable memory, return", prompt)
+
+    def test_memory_prompt_requires_explicit_memory_request(self) -> None:
+        case = load_memory_eval_cases(
+            _write_jsonl(
+                [
+                    {
+                        "id": "memory-implicit-001",
+                        "agent_profile_id": "phone-assistant",
+                        "transcript": [{"role": "user", "text": "我喜欢女声"}],
+                        "expected": {"contents": []},
+                        "tags": ["implicit"],
+                    }
+                ]
+            )
+        )[0]
+
+        prompt = _memory_prompt(case)
+
+        self.assertIn("Only extract memory when the user explicitly asks", prompt)
+        self.assertIn("我喜欢女声", prompt)
+        self.assertIn("return {\"memories\":[]}", prompt)
+        self.assertIn("记住我喜欢女声", prompt)
 
 
 class _FakeModelClient:

@@ -10,10 +10,16 @@ import urllib.request
 from pathlib import Path
 from typing import Protocol
 
+from .config import load_local_env
 from .memory_eval_runner import default_eval_cases_path as default_memory_cases_path
 from .memory_eval_runner import load_eval_cases as load_memory_eval_cases
 from .semantic_router.eval_runner import default_eval_cases_path as default_router_cases_path
 from .semantic_router.eval_runner import load_eval_cases as load_router_eval_cases
+from .semantic_router.policy_guard import enforce_route_policy
+
+
+DEFAULT_MODEL_AUDIT_BASE_URL = "https://apihub.agnes-ai.com/v1"
+DEFAULT_MODEL_AUDIT_MODEL = "agnes-2.0-flash"
 
 
 class JsonModelClient(Protocol):
@@ -38,11 +44,12 @@ class OpenAICompatibleJsonClient:
 
     @classmethod
     def from_env(cls) -> "OpenAICompatibleJsonClient":
-        base_url = os.environ.get("MODEL_AUDIT_BASE_URL", "").strip()
+        load_local_env()
+        base_url = os.environ.get("MODEL_AUDIT_BASE_URL", DEFAULT_MODEL_AUDIT_BASE_URL).strip()
         api_key = os.environ.get("MODEL_AUDIT_API_KEY", "").strip()
-        model = os.environ.get("MODEL_AUDIT_MODEL", "").strip()
-        if not base_url or not api_key or not model:
-            raise RuntimeError("MODEL_AUDIT_BASE_URL, MODEL_AUDIT_API_KEY, and MODEL_AUDIT_MODEL are required.")
+        model = os.environ.get("MODEL_AUDIT_MODEL", DEFAULT_MODEL_AUDIT_MODEL).strip()
+        if not api_key:
+            raise RuntimeError("MODEL_AUDIT_API_KEY is required.")
         return cls(base_url=base_url, api_key=api_key, model=model)
 
     def complete_json(self, prompt: str) -> dict:
@@ -180,8 +187,10 @@ def _router_prompt(case) -> str:
         "Disambiguation examples:\n"
         "发短信, 发信息, 发消息, 短信通知, 发信息告诉他... => sms.compose, not chat/general.\n"
         "淘宝搜索, 京东搜索, 打开京东搜索 => app.search, not app.open_deep_link.\n"
+        "打开淘宝 => app.open, not app.search.\n"
         "发微信给...说... => app.open_deep_link, not chat/general.\n"
         "看电影, 看视频, 播放音乐, 听歌 => media.play_from_search, not chat/general.\n"
+        "For default profile music creation, 帮我做一首下班路上听的中文 LoFi => create_song.\n"
         "For default profile music publishing, 发出去 => publish_work.\n"
         f"agent_profile_id: {case.agent_profile_id}\n"
         f"text: {case.text}"
@@ -192,6 +201,12 @@ def _memory_prompt(case) -> str:
     return (
         "Extract durable long-term user memories from this transcript.\n"
         "Return only JSON: {\"memories\":[{\"type\":\"preference\",\"content\":\"...\",\"confidence\":0.0}]}.\n"
+        "Only extract memory when the user explicitly asks to remember, update a preference, or avoid something later. "
+        "Explicit triggers include 记住, 请你记住, 以后你要记得, 我的偏好是, 不要再, 别再, 以后不要, 以后别. "
+        "Implicit likes or dislikes such as 我喜欢女声 or 我不喜欢男声 are ordinary chat; return {\"memories\":[]} for them.\n"
+        "Examples:\n"
+        "- 记住我喜欢女声 => {\"memories\":[{\"type\":\"preference\",\"content\":\"我喜欢女声\"}]}\n"
+        "- 我喜欢女声 => {\"memories\":[]}\n"
         "content must be copied verbatim from the user's Chinese phrase whenever possible. "
         "Do not translate, explain, add parentheses, or rewrite into third person. "
         "Keep polarity: 喜欢, 不喜欢, 讨厌, 不要, 别再. "
@@ -202,9 +217,19 @@ def _memory_prompt(case) -> str:
 
 
 def _router_record(case, client: JsonModelClient) -> dict:
-    decision = client.complete_json(_router_prompt(case))
+    raw_decision = client.complete_json(_router_prompt(case))
+    decision = enforce_route_policy(
+        _with_route_metadata(raw_decision, case),
+        text=case.text,
+        agent_profile_id=case.agent_profile_id,
+    )
     return {
         "case_id": case.id,
+        "raw_decision": {
+            key: raw_decision[key]
+            for key in ("mode", "intent", "scenario_id", "scenario_intent")
+            if key in raw_decision
+        },
         "decision": {
             key: decision[key]
             for key in ("mode", "intent", "scenario_id", "scenario_intent")
@@ -219,6 +244,20 @@ def _memory_record(case, client: JsonModelClient) -> dict:
     return {
         "case_id": case.id,
         "memories": [memory for memory in memories if isinstance(memory, dict)],
+    }
+
+
+def _with_route_metadata(decision: dict, case) -> dict:
+    return {
+        "type": "route_decision",
+        "session_id": "model-audit",
+        "turn_id": case.id,
+        "agent_profile_id": case.agent_profile_id,
+        "confidence": 0.0,
+        "need_clarification": False,
+        "requires_confirmation": False,
+        "arguments": {},
+        **decision,
     }
 
 
