@@ -126,11 +126,12 @@ class RealtimeGateway:
         if message.get("type") == "user_text":
             text = str(message.get("text") or "").strip()
             if self.upstream and self.session_id and text:
-                self._record_user_text_input(text)
                 try:
                     await self.upstream.send(make_json_frame(CLIENT_EVENTS["CHAT_TEXT_QUERY"], {"content": text}, self.session_id))
                 except Exception:
                     await self._send_json({"type": "error", "message": "发送文本到火山实时语音失败。"})
+                    return
+                self._record_user_text_input(text)
             return
 
         if message.get("type") == "finish":
@@ -420,7 +421,7 @@ class RealtimeGateway:
             )
         )
         await self._send_json(
-            self.semantic_router.route_text(
+            self._route_user_text(
                 session_id=self.session_id,
                 turn_id=output_id,
                 text=self.current_user_text,
@@ -428,6 +429,37 @@ class RealtimeGateway:
                 agent_profile_id=self.agent_profile_id,
             )
         )
+
+    def _route_user_text(
+        self,
+        session_id: str,
+        turn_id: str,
+        text: str,
+        source: str,
+        agent_profile_id: str,
+    ) -> dict[str, Any]:
+        try:
+            return self.semantic_router.route_text(
+                session_id=session_id,
+                turn_id=turn_id,
+                text=text,
+                source=source,
+                agent_profile_id=agent_profile_id,
+            )
+        except Exception as exc:
+            self._record_debug("error", {"message": f"Semantic Router failed: {exc}"})
+            return {
+                "type": "route_decision",
+                "session_id": session_id,
+                "turn_id": turn_id,
+                "agent_profile_id": agent_profile_id,
+                "mode": "chat",
+                "intent": "general",
+                "confidence": 0.0,
+                "need_clarification": False,
+                "requires_confirmation": False,
+                "arguments": {},
+            }
 
     def _record_user_text_input(self, text: str) -> None:
         output_id = self._next_user_output_id()
@@ -441,6 +473,8 @@ class RealtimeGateway:
                 output_id=output_id,
             )
         )
+        self.current_user_output_id = ""
+        self.current_user_text = ""
 
     def _set_agent_profile_from_message(self, message: dict[str, Any]) -> None:
         agent_profile_id = str(message.get("agent_profile_id") or "default").strip()

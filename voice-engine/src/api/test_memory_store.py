@@ -32,8 +32,8 @@ class MemoryStoreTest(unittest.TestCase):
             session_id="session-1",
             agent_profile_id="phone-assistant",
             transcript=[
-                {"role": "user", "text": "我不喜欢男声"},
-                {"role": "user", "text": "我讨厌每次都问确认"},
+                {"role": "user", "text": "记住我不喜欢男声"},
+                {"role": "user", "text": "记住我讨厌每次都问确认"},
                 {"role": "user", "text": "以后别再用男声"},
                 {"role": "assistant", "text": "好的，我会记住。"},
             ],
@@ -43,6 +43,21 @@ class MemoryStoreTest(unittest.TestCase):
             [memory["content"] for memory in memories],
             ["我不喜欢男声", "我讨厌每次都问确认", "不要用男声"],
         )
+
+    def test_rule_extractor_ignores_implicit_preference_chat(self) -> None:
+        extractor = RuleMemoryExtractor()
+
+        memories = extractor.extract(
+            session_id="session-1",
+            agent_profile_id="phone-assistant",
+            transcript=[
+                {"role": "user", "text": "我喜欢女生"},
+                {"role": "user", "text": "我不喜欢男声"},
+                {"role": "user", "text": "我讨厌每次都问确认"},
+            ],
+        )
+
+        self.assertEqual(memories, [])
 
     def test_store_runs_rule_and_model_extractors_but_accepts_rule_memories(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -128,13 +143,13 @@ class MemoryStoreTest(unittest.TestCase):
 
             self.assertEqual([memory["content"] for memory in context["memories"]], ["我喜欢女声"])
 
-    def test_later_session_can_use_user_preference_memory(self) -> None:
+    def test_later_session_can_use_explicit_user_preference_memory(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             store = LongTermMemoryStore(base_dir=Path(temp_dir))
             store.extract_compare_and_persist(
                 session_id="preference-session",
                 agent_profile_id="phone-assistant",
-                transcript=[{"role": "user", "text": "我喜欢女生"}],
+                transcript=[{"role": "user", "text": "记住我喜欢女生"}],
             )
 
             context = store.build_memory_context(

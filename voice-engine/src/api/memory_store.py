@@ -15,13 +15,10 @@ class MemoryExtractor(Protocol):
 
 class RuleMemoryExtractor:
     patterns = (
-        re.compile(r"(?:请你)?记住(.+)$"),
-        re.compile(r"以后你要记得(.+)$"),
-        re.compile(r"我的偏好是(.+)$"),
-        re.compile(r"我不喜欢(.+)$"),
-        re.compile(r"我讨厌(.+)$"),
+        re.compile(r"^(?:请你)?记住(.+)$"),
+        re.compile(r"^以后你要记得(.+)$"),
+        re.compile(r"^我的偏好是(.+)$"),
         re.compile(r"^(?:以后)?(?:不要|别)再?(.+)$"),
-        re.compile(r"我喜欢(.+)$"),
     )
 
     def extract(self, session_id: str, agent_profile_id: str, transcript: list[dict]) -> list[dict]:
@@ -53,14 +50,8 @@ class RuleMemoryExtractor:
             if not match:
                 continue
             content = match.group(1).strip(" ，。,.")
-            if pattern.pattern.startswith("我不喜欢"):
-                content = f"我不喜欢{content}"
-            if pattern.pattern.startswith("我讨厌"):
-                content = f"我讨厌{content}"
             if pattern.pattern.startswith("^(?:以后)?"):
                 content = f"不要{content}"
-            if pattern.pattern.startswith("我喜欢"):
-                content = f"我喜欢{content}"
             return content
         return ""
 

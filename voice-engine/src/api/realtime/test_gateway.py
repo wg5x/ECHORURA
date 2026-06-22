@@ -131,6 +131,22 @@ class GatewayDebugLogTest(unittest.TestCase):
         self.assertEqual(decision["mode"], "native_action")
         self.assertEqual(decision["intent"], "app.open")
 
+    def test_user_asr_falls_back_to_chat_when_router_fails(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        logger = _FakeDebugLogger()
+        gateway = RealtimeGateway(client_ws)
+        gateway.session_id = "session-1"
+        gateway.semantic_router = _FailingSemanticRouter()
+        gateway.debug_logger = logger
+
+        asyncio.run(gateway._handle_user_asr_text("打开淘宝"))
+
+        sent = [json.loads(message) for message in client_ws.sent]
+        self.assertEqual([message["type"] for message in sent], ["event", "voice_turn_text", "transcript_event", "route_decision"])
+        self.assertEqual(sent[3]["mode"], "chat")
+        self.assertEqual(sent[3]["intent"], "general")
+        self.assertIn("error", [kind for kind, _payload in logger.records])
+
     def test_start_message_stores_selected_agent_profile(self) -> None:
         gateway = RealtimeGateway(_FakeClientWebSocket())
         message = {"type": "start", "agent_profile_id": "phone-assistant"}
@@ -314,10 +330,39 @@ class GatewayDebugLogTest(unittest.TestCase):
         conversation_store = _FakeConversationStore()
         gateway.conversation_store = conversation_store
 
-        asyncio.run(gateway._handle_text(json.dumps({"type": "user_text", "text": "我喜欢女生"}, ensure_ascii=False)))
+        asyncio.run(gateway._handle_text(json.dumps({"type": "user_text", "text": "记住我喜欢女生"}, ensure_ascii=False)))
 
         self.assertEqual(conversation_store.transcripts[0]["role"], "user")
-        self.assertEqual(conversation_store.transcripts[0]["text"], "我喜欢女生")
+        self.assertEqual(conversation_store.transcripts[0]["text"], "记住我喜欢女生")
+
+    def test_user_text_does_not_merge_into_next_asr_turn(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+        gateway.session_id = "session-1"
+        gateway.upstream = _FakeUpstream()
+        conversation_store = _FakeConversationStore()
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(gateway._handle_text(json.dumps({"type": "user_text", "text": "请记住我的微信号是123456"}, ensure_ascii=False)))
+        asyncio.run(gateway._handle_user_asr_text("打开淘宝"))
+
+        user_event = json.loads(client_ws.sent[0])
+        self.assertEqual(user_event["event"]["text"], "打开淘宝")
+        self.assertEqual(user_event["event"]["outputId"], "user-output-2")
+        self.assertEqual([item["text"] for item in conversation_store.transcripts], ["请记住我的微信号是123456", "打开淘宝"])
+
+    def test_user_text_send_failure_does_not_record_transcript_for_memory(self) -> None:
+        client_ws = _FakeClientWebSocket()
+        gateway = RealtimeGateway(client_ws)
+        gateway.session_id = "session-1"
+        gateway.upstream = _FailingUpstream()
+        conversation_store = _FakeConversationStore()
+        gateway.conversation_store = conversation_store
+
+        asyncio.run(gateway._handle_text(json.dumps({"type": "user_text", "text": "记住我的手机号是123456"}, ensure_ascii=False)))
+
+        self.assertEqual(conversation_store.transcripts, [])
+        self.assertEqual(json.loads(client_ws.sent[0])["type"], "error")
 
     def test_close_finalizes_conversation_and_persists_memory(self) -> None:
         gateway = RealtimeGateway(_FakeClientWebSocket())
@@ -422,6 +467,16 @@ class _FakeUpstream:
 
     async def send(self, payload: bytes) -> None:
         self.sent.append(payload)
+
+
+class _FailingUpstream:
+    async def send(self, payload: bytes) -> None:
+        raise RuntimeError("upstream unavailable")
+
+
+class _FailingSemanticRouter:
+    def route_text(self, **kwargs) -> dict:
+        raise RuntimeError("router unavailable")
 
 
 class _FakeConversationStore:
