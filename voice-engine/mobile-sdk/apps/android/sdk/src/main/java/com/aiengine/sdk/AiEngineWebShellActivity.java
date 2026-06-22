@@ -1,0 +1,530 @@
+package com.aiengine.sdk;
+
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.View;
+import android.webkit.PermissionRequest;
+import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
+import android.webkit.ConsoleMessage;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class AiEngineWebShellActivity extends Activity {
+    private static final String TAG = "AIEngineWebView";
+    private static final int REQUEST_RECORD_AUDIO = 1001;
+
+    private AiEngineWebShellConfig webShellConfig;
+    private WebView webView;
+    private PermissionRequest pendingAudioPermissionRequest;
+    private String[] pendingAudioPermissionResources;
+    private boolean recordAudioPermissionRequestInFlight;
+    private boolean updateCheckStarted;
+
+    protected abstract AiEngineWebShellConfig createWebShellConfig();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        webShellConfig = createWebShellConfig();
+        if (webShellConfig == null || webShellConfig.getStartUrl().isEmpty()) {
+            throw new IllegalStateException("AiEngineWebShellConfig with non-empty startUrl is required.");
+        }
+
+        FrameLayout rootView = new FrameLayout(this);
+        rootView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        applySystemBarInsets(rootView);
+
+        webView = new WebView(this);
+        webView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        settings.setUseWideViewPort(true);
+        webView.addJavascriptInterface(new AndroidBridge(), webShellConfig.getBridgeName());
+        webView.clearCache(true);
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.i(TAG, "Page finished: " + url);
+                playMutedVideos(view);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    Log.e(TAG, "Page error: " + request.getUrl() + " " + error.getErrorCode() + " " + error.getDescription());
+                }
+            }
+        });
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.i(
+                        TAG,
+                        "Console " + consoleMessage.messageLevel()
+                                + " " + consoleMessage.sourceId()
+                                + ":" + consoleMessage.lineNumber()
+                                + " " + consoleMessage.message()
+                );
+                return super.onConsoleMessage(consoleMessage);
+            }
+
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i(TAG, "Permission request: " + joinResources(request.getResources()));
+                        if (pendingAudioPermissionRequest != null && pendingAudioPermissionRequest != request) {
+                            pendingAudioPermissionRequest.deny();
+                            pendingAudioPermissionRequest = null;
+                            pendingAudioPermissionResources = null;
+                        }
+
+                        String[] grantedResources = getAllowedWebViewResources(request);
+                        if (grantedResources.length == 0) {
+                            request.deny();
+                            return;
+                        }
+
+                        if (!hasRecordAudioPermission()) {
+                            Log.i(TAG, "Android RECORD_AUDIO not granted; requesting system permission.");
+                            pendingAudioPermissionRequest = request;
+                            pendingAudioPermissionResources = grantedResources;
+                            requestRecordAudioPermission();
+                            return;
+                        }
+
+                        Log.i(TAG, "Granting WebView resources: " + joinResources(grantedResources));
+                        request.grant(grantedResources);
+                    }
+                });
+            }
+
+            @Override
+            public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (pendingAudioPermissionRequest == request) {
+                    pendingAudioPermissionRequest = null;
+                    pendingAudioPermissionResources = null;
+                }
+            }
+        });
+        rootView.addView(webView);
+        setContentView(rootView);
+
+        if (savedInstanceState == null) {
+            webView.loadUrl(webShellConfig.getStartUrl());
+        } else {
+            webView.restoreState(savedInstanceState);
+        }
+
+        if (webShellConfig.isUpdateCheckEnabled()) {
+            checkForUpdates();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        webView.saveState(outState);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQUEST_RECORD_AUDIO) {
+            return;
+        }
+
+        recordAudioPermissionRequestInFlight = false;
+        boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (pendingAudioPermissionRequest == null) {
+            notifyMicrophonePermissionResult(granted);
+            return;
+        }
+
+        if (granted) {
+            Log.i(TAG, "Android RECORD_AUDIO granted; granting pending WebView request.");
+            pendingAudioPermissionRequest.grant(pendingAudioPermissionResources);
+        } else {
+            Log.i(TAG, "Android RECORD_AUDIO denied; denying pending WebView request.");
+            pendingAudioPermissionRequest.deny();
+        }
+
+        pendingAudioPermissionRequest = null;
+        pendingAudioPermissionResources = null;
+        notifyMicrophonePermissionResult(granted);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+            return;
+        }
+
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (pendingAudioPermissionRequest != null) {
+            pendingAudioPermissionRequest.deny();
+            pendingAudioPermissionRequest = null;
+            pendingAudioPermissionResources = null;
+        }
+        if (webView != null) {
+            webView.destroy();
+        }
+        super.onDestroy();
+    }
+
+    private boolean hasRecordAudioPermission() {
+        return android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M
+                || checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestRecordAudioPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (recordAudioPermissionRequestInFlight) {
+                return;
+            }
+            recordAudioPermissionRequestInFlight = true;
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
+        }
+    }
+
+    private void notifyMicrophonePermissionResult(boolean granted) {
+        if (webView == null) {
+            return;
+        }
+        String script = "window.dispatchEvent(new CustomEvent('ai-engine-android-microphone-permission',"
+                + "{detail:{granted:" + granted + "}}));";
+        webView.evaluateJavascript(script, null);
+    }
+
+    private void applySystemBarInsets(FrameLayout rootView) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        }
+
+        rootView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {
+                view.setPadding(
+                        insets.getSystemWindowInsetLeft(),
+                        insets.getSystemWindowInsetTop(),
+                        insets.getSystemWindowInsetRight(),
+                        insets.getSystemWindowInsetBottom()
+                );
+                return insets;
+            }
+        });
+        rootView.requestApplyInsets();
+    }
+
+    private void playMutedVideos(WebView view) {
+        view.evaluateJavascript(
+                "(function(){"
+                        + "if(window.__aiEnginePlayMutedVideos){clearInterval(window.__aiEnginePlayMutedVideos);}"
+                        + "var attempts=0;"
+                        + "function playVideos(){"
+                        + "document.querySelectorAll('video').forEach(function(video){"
+                        + "video.muted=true;"
+                        + "video.loop=true;"
+                        + "video.setAttribute('playsinline','');"
+                        + "video.setAttribute('webkit-playsinline','');"
+                        + "video.play().catch(function(){});"
+                        + "});"
+                        + "attempts+=1;"
+                        + "if(attempts>=20){clearInterval(window.__aiEnginePlayMutedVideos);window.__aiEnginePlayMutedVideos=null;}"
+                        + "}"
+                        + "playVideos();"
+                        + "window.__aiEnginePlayMutedVideos=setInterval(playVideos,500);"
+                        + "})();",
+                null
+        );
+    }
+
+    private String[] getAllowedWebViewResources(PermissionRequest request) {
+        List<String> allowed = new ArrayList<>();
+        for (String resource : request.getResources()) {
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
+                allowed.add(resource);
+            }
+        }
+        return allowed.toArray(new String[0]);
+    }
+
+    private String joinResources(String[] resources) {
+        StringBuilder builder = new StringBuilder();
+        for (int index = 0; index < resources.length; index += 1) {
+            if (index > 0) {
+                builder.append(",");
+            }
+            builder.append(resources[index]);
+        }
+        return builder.toString();
+    }
+
+    private void checkForUpdates() {
+        if (updateCheckStarted) {
+            return;
+        }
+        updateCheckStarted = true;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    UpdateInfo updateInfo = fetchUpdateInfo();
+                    if (updateInfo == null || updateInfo.build <= getCurrentVersionCode()) {
+                        return;
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showUpdateDialog(updateInfo);
+                        }
+                    });
+                } catch (Exception ignored) {
+                    // Update checks should never block the WebView app itself.
+                }
+            }
+        }).start();
+    }
+
+    private UpdateInfo fetchUpdateInfo() throws Exception {
+        if (webShellConfig.getUpdateManifestUrl().isEmpty()) {
+            return null;
+        }
+
+        URL url = new URL(webShellConfig.getUpdateManifestUrl() + "?t=" + System.currentTimeMillis());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(8000);
+        connection.setReadTimeout(8000);
+        connection.setRequestMethod("GET");
+
+        try {
+            int statusCode = connection.getResponseCode();
+            if (statusCode < 200 || statusCode >= 300) {
+                return null;
+            }
+
+            JSONObject json = new JSONObject(readStream(connection.getInputStream()));
+            int build = parsePositiveInt(json.optString("build", ""));
+            if (build <= 0) {
+                return null;
+            }
+
+            String versionName = firstNonEmpty(
+                    json.optString("versionShort", ""),
+                    json.optString("versionName", ""),
+                    json.optString("version", "")
+            );
+            String updateUrl = firstNonEmpty(
+                    json.optString("update_url", ""),
+                    json.optString("updateUrl", ""),
+                    json.optString("install_url", ""),
+                    json.optString("installUrl", ""),
+                    webShellConfig.getDefaultUpdateUrl()
+            );
+            String changelog = json.optString("changelog", "").trim();
+            return new UpdateInfo(build, versionName, updateUrl, changelog);
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private String readStream(InputStream stream) throws Exception {
+        StringBuilder builder = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+            return builder.toString();
+        } finally {
+            reader.close();
+        }
+    }
+
+    private void showUpdateDialog(final UpdateInfo updateInfo) {
+        if (isFinishing()
+                || (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1 && isDestroyed())) {
+            return;
+        }
+
+        StringBuilder message = new StringBuilder();
+        message.append("当前版本：")
+                .append(getCurrentVersionName())
+                .append(" (")
+                .append(getCurrentVersionCode())
+                .append(")");
+
+        if (!updateInfo.versionName.isEmpty()) {
+            message.append("\n最新版本：")
+                    .append(updateInfo.versionName)
+                    .append(" (")
+                    .append(updateInfo.build)
+                    .append(")");
+        } else {
+            message.append("\n最新版本：")
+                    .append(updateInfo.build);
+        }
+
+        if (!updateInfo.changelog.isEmpty()) {
+            message.append("\n\n更新内容：\n")
+                    .append(updateInfo.changelog);
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("发现新版本")
+                .setMessage(message.toString())
+                .setPositiveButton("去升级", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        openUpdateUrl(updateInfo.updateUrl);
+                    }
+                })
+                .setNegativeButton("稍后", null)
+                .show();
+    }
+
+    private void openUpdateUrl(String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Exception ignored) {
+            webView.loadUrl(url);
+        }
+    }
+
+    private int getCurrentVersionCode() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                return (int) getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode();
+            }
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    private String getCurrentVersionName() {
+        try {
+            String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            return versionName == null ? "" : versionName;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private int parsePositiveInt(String value) {
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    private String firstNonEmpty(String... values) {
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return "";
+    }
+
+    private static final class UpdateInfo {
+        final int build;
+        final String versionName;
+        final String updateUrl;
+        final String changelog;
+
+        UpdateInfo(int build, String versionName, String updateUrl, String changelog) {
+            this.build = build;
+            this.versionName = versionName;
+            this.updateUrl = updateUrl;
+            this.changelog = changelog;
+        }
+    }
+
+    private final class AndroidBridge {
+        @JavascriptInterface
+        public boolean hasMicrophonePermission() {
+            return hasRecordAudioPermission();
+        }
+
+        @JavascriptInterface
+        public void requestMicrophonePermission() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (hasRecordAudioPermission()) {
+                        notifyMicrophonePermissionResult(true);
+                        return;
+                    }
+                    requestRecordAudioPermission();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openAppSettings() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:" + getPackageName())
+                    );
+                    startActivity(intent);
+                }
+            });
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ai-engine",
+  "private": true,
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "build": "./scripts/build.sh",
+    "dev:web": "npm --prefix apps/web run dev:web",
+    "dev:api": "npm --prefix apps/web run dev:api",
+    "preview": "npm --prefix apps/web run preview"
+  }
+}

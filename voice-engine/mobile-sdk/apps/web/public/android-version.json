@@ -1,0 +1,9 @@
+{
+  "name": "AI Engine",
+  "versionShort": "0.1.9",
+  "versionName": "0.1.9",
+  "build": "10",
+  "changelog": "补充音频设置权限和麦克风设备诊断日志。",
+  "update_url": "https://www.betaqr.com.cn/bka92l6c",
+  "install_url": "https://www.betaqr.com.cn/bka92l6c"
+}
