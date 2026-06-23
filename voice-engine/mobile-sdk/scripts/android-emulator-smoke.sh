@@ -112,7 +112,7 @@ echo "==> Clearing app data for deterministic launch"
 adb_shell_with_timeout "$adb_bin" "$emulator_serial" 30 pm clear com.aiengine.ai >/dev/null
 
 echo "==> Launching app"
-adb_shell_with_timeout "$adb_bin" "$emulator_serial" 30 monkey -p com.aiengine.ai -c android.intent.category.LAUNCHER 1 >/dev/null
+adb_shell_with_timeout "$adb_bin" "$emulator_serial" 30 am start -n com.aiengine.ai/.MainActivity >/dev/null
 dismiss_system_wait_dialog "$adb_bin" "$emulator_serial" || true
 
 pid="$(wait_for_process "$adb_bin" "$emulator_serial" com.aiengine.ai 20)"

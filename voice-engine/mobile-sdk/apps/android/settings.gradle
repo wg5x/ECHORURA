@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "AIEngineAndroid"
 include ":app"
 include ":sdk"
+include ":samples:host-app"

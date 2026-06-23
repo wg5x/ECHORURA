@@ -20,7 +20,7 @@ Host Android App
 
 ## 1. 依赖方式
 
-当前仓库内有两种接入方式：
+当前仓库内有三种接入方式：
 
 ### 方式 A：源码 module 依赖
 
@@ -32,15 +32,50 @@ dependencies {
 }
 ```
 
-### 方式 B：AAR 依赖
+### 方式 B：本地 Maven 依赖
+
+构建并发布 release SDK 到本工程内的本地 Maven 仓库：
+
+```bash
+cd apps/android
+./gradlew :sdk:publishReleasePublicationToLocalSdkRepository
+```
+
+产物坐标：
+
+```text
+com.aiengine:ai-engine-android-sdk:0.2.0
+```
+
+仓库位置：
+
+```text
+apps/android/sdk/build/local-maven
+```
+
+宿主工程示例：
+
+```gradle
+repositories {
+    maven {
+        url uri("/path/to/ECHORURA/voice-engine/mobile-sdk/apps/android/sdk/build/local-maven")
+    }
+}
+
+dependencies {
+    implementation "com.aiengine:ai-engine-android-sdk:0.2.0"
+}
+```
+
+### 方式 C：AAR 文件依赖
 
 当前可构建产物：
 
 ```text
-apps/android/sdk/build/outputs/aar/sdk-debug.aar
+apps/android/sdk/build/outputs/aar/sdk-release.aar
 ```
 
-宿主 App 可以先以本地 AAR 的形式集成，后续再决定是否发布到 Maven 仓库。
+宿主 App 也可以先以本地 AAR 的形式集成。
 
 ## 2. 宿主 Activity 写法
 
@@ -71,6 +106,19 @@ AiEngineAndroid
 ```
 
 如果宿主 H5 侧使用的是当前复制过来的 Web，应保持这个名字不变。
+
+最小宿主示例：
+
+```text
+apps/android/samples/host-app/
+```
+
+构建命令：
+
+```bash
+cd apps/android
+./gradlew :samples:host-app:assembleDebug
+```
 
 ## 3. 宿主 Manifest 要求
 
@@ -114,22 +162,32 @@ apps/api/runtime/intent_service.py
 apps/web/src/lib/runtimeApi.ts
 ```
 
-## 5. 当前已验证内容
+## 5. Native Bridge
+
+SDK 现在额外封装了常用宿主能力：
+
+- 分享文本和链接
+- 打开 URL
+- 打开 App/Wi-Fi/蓝牙/通知/无障碍/系统设置页
+- 按 action/data/type 打开 Android Intent
+- 通过 bridge 选择文件并回传 `content://` URI 和元数据
+- 支持标准 WebView `<input type="file">`
+
+详细协议见：
+
+```text
+apps/android/NATIVE_BRIDGE.md
+```
+
+## 6. 当前已验证内容
 
 当前仓库内已经验证：
 
 1. `:sdk:testDebugUnitTest` 可通过
-2. `:sdk:assembleDebug` 可产出 AAR
-3. `:app:assembleDebug` 可产出 APK
-4. APK 已在 Android 模拟器中安装并启动
-5. WebView 可加载共享 H5 首页和场景页
-6. Python 意图识别测试可通过
-
-## 6. 下一步建议
-
-如果要让其他 Android 应用接入更快，建议下一步继续做这几件事：
-
-1. 把 `sdk-debug.aar` 升级为正式发布产物
-2. 为 SDK 增加可扩展的 Native Action bridge
-3. 给宿主暴露更新开关、日志开关和 WebView 调试开关
-4. 增加真机安装与麦克风授权回归检查
+2. `:sdk:assembleRelease` 可产出 release AAR
+3. `:sdk:publishReleasePublicationToLocalSdkRepository` 可发布本地 Maven 产物
+4. `:samples:host-app:assembleDebug` 可构建最小宿主示例
+5. `:app:assembleDebug` 可产出 demo APK
+6. APK 已在 Android 模拟器中安装并启动
+7. WebView 可加载共享 H5 首页和场景页
+8. Python 意图识别测试可通过

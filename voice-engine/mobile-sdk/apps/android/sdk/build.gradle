@@ -1,6 +1,10 @@
 plugins {
     id "com.android.library"
+    id "maven-publish"
 }
+
+group = "com.aiengine"
+version = "0.2.0"
 
 android {
     namespace "com.aiengine.sdk"
@@ -10,14 +14,58 @@ android {
         minSdk 23
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+        buildConfigField "String", "SDK_VERSION_NAME", "\"${project.version}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
     testImplementation "junit:junit:4.13.2"
+    testImplementation "org.json:json:20240303"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = project.group
+                artifactId = "ai-engine-android-sdk"
+                version = project.version
+
+                pom {
+                    name = "AI Engine Android SDK"
+                    description = "Reusable WebView shell SDK for AI Engine mobile hosts."
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "localSdk"
+                url = layout.buildDirectory.dir("local-maven")
+            }
+        }
+    }
 }

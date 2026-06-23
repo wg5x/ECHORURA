@@ -3,17 +3,21 @@ package com.aiengine.sdk;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.webkit.PermissionRequest;
 import android.view.ViewGroup;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebSettings;
@@ -34,15 +38,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public abstract class AiEngineWebShellActivity extends Activity {
     private static final String TAG = "AIEngineWebView";
     private static final int REQUEST_RECORD_AUDIO = 1001;
+    private static final int REQUEST_BRIDGE_FILE_CHOOSER = 1002;
+    private static final int REQUEST_WEB_FILE_CHOOSER = 1003;
 
     private AiEngineWebShellConfig webShellConfig;
     private WebView webView;
     private PermissionRequest pendingAudioPermissionRequest;
     private String[] pendingAudioPermissionResources;
+    private ValueCallback<Uri[]> pendingWebFilePathCallback;
+    private String pendingBridgeFileRequestId;
     private boolean recordAudioPermissionRequestInFlight;
     private boolean updateCheckStarted;
 
@@ -147,6 +156,28 @@ public abstract class AiEngineWebShellActivity extends Activity {
                     pendingAudioPermissionResources = null;
                 }
             }
+
+            @Override
+            public boolean onShowFileChooser(
+                    WebView view,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams
+            ) {
+                if (pendingWebFilePathCallback != null) {
+                    pendingWebFilePathCallback.onReceiveValue(null);
+                }
+                pendingWebFilePathCallback = filePathCallback;
+
+                try {
+                    startActivityForResult(fileChooserParams.createIntent(), REQUEST_WEB_FILE_CHOOSER);
+                    return true;
+                } catch (Exception error) {
+                    Log.e(TAG, "Unable to open WebView file chooser.", error);
+                    pendingWebFilePathCallback = null;
+                    filePathCallback.onReceiveValue(null);
+                    return false;
+                }
+            }
         });
         rootView.addView(webView);
         setContentView(rootView);
@@ -196,6 +227,20 @@ public abstract class AiEngineWebShellActivity extends Activity {
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_WEB_FILE_CHOOSER) {
+            handleWebFileChooserResult(resultCode, data);
+            return;
+        }
+
+        if (requestCode == REQUEST_BRIDGE_FILE_CHOOSER) {
+            handleBridgeFileChooserResult(resultCode, data);
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack();
@@ -214,6 +259,7 @@ public abstract class AiEngineWebShellActivity extends Activity {
         }
         if (webView != null) {
             webView.destroy();
+            webView = null;
         }
         super.onDestroy();
     }
@@ -239,6 +285,21 @@ public abstract class AiEngineWebShellActivity extends Activity {
         }
         String script = "window.dispatchEvent(new CustomEvent('ai-engine-android-microphone-permission',"
                 + "{detail:{granted:" + granted + "}}));";
+        webView.evaluateJavascript(script, null);
+    }
+
+    private void dispatchNativeActionResult(String action, boolean success, String message) {
+        evaluateJavascript(AiEngineBridgeEvent.nativeActionResult(action, success, message));
+    }
+
+    private void dispatchFileSelection(String requestId, List<AiEngineSelectedFile> files, boolean cancelled, String error) {
+        evaluateJavascript(AiEngineBridgeEvent.fileSelection(requestId, files, cancelled, error));
+    }
+
+    private void evaluateJavascript(String script) {
+        if (webView == null || script == null || script.isEmpty()) {
+            return;
+        }
         webView.evaluateJavascript(script, null);
     }
 
@@ -442,6 +503,144 @@ public abstract class AiEngineWebShellActivity extends Activity {
         }
     }
 
+    private boolean startNativeActivity(String actionName, Intent intent) {
+        try {
+            startActivity(intent);
+            dispatchNativeActionResult(actionName, true, "");
+            return true;
+        } catch (Exception error) {
+            Log.e(TAG, "Native action failed: " + actionName, error);
+            dispatchNativeActionResult(actionName, false, error.getMessage());
+            return false;
+        }
+    }
+
+    private void handleWebFileChooserResult(int resultCode, Intent data) {
+        if (pendingWebFilePathCallback == null) {
+            return;
+        }
+
+        Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+        pendingWebFilePathCallback.onReceiveValue(results);
+        pendingWebFilePathCallback = null;
+    }
+
+    private void handleBridgeFileChooserResult(int resultCode, Intent data) {
+        String requestId = pendingBridgeFileRequestId;
+        pendingBridgeFileRequestId = null;
+
+        if (requestId == null) {
+            return;
+        }
+
+        if (resultCode != RESULT_OK || data == null) {
+            dispatchFileSelection(requestId, new ArrayList<AiEngineSelectedFile>(), true, "");
+            return;
+        }
+
+        try {
+            dispatchFileSelection(requestId, collectSelectedFiles(data), false, "");
+        } catch (Exception error) {
+            Log.e(TAG, "Unable to read selected file metadata.", error);
+            dispatchFileSelection(requestId, new ArrayList<AiEngineSelectedFile>(), false, error.getMessage());
+        }
+    }
+
+    private List<AiEngineSelectedFile> collectSelectedFiles(Intent data) {
+        List<AiEngineSelectedFile> files = new ArrayList<>();
+        ClipData clipData = data.getClipData();
+        if (clipData != null) {
+            for (int index = 0; index < clipData.getItemCount(); index += 1) {
+                Uri uri = clipData.getItemAt(index).getUri();
+                if (uri != null) {
+                    files.add(describeSelectedFile(uri));
+                }
+            }
+            return files;
+        }
+
+        Uri uri = data.getData();
+        if (uri != null) {
+            files.add(describeSelectedFile(uri));
+        }
+        return files;
+    }
+
+    private AiEngineSelectedFile describeSelectedFile(Uri uri) {
+        String name = "";
+        long size = -1L;
+        String mimeType = firstNonEmpty(getContentResolver().getType(uri), "");
+
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex >= 0) {
+                        name = firstNonEmpty(cursor.getString(nameIndex), "");
+                    }
+
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) {
+                        size = cursor.getLong(sizeIndex);
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+
+        return new AiEngineSelectedFile(uri.toString(), name, mimeType, size);
+    }
+
+    private void openBridgeFileChooser(String requestId, String acceptTypes, boolean allowMultiple) {
+        if (pendingBridgeFileRequestId != null) {
+            dispatchNativeActionResult("chooseFile", false, "已有文件选择请求进行中。");
+            return;
+        }
+
+        pendingBridgeFileRequestId = firstNonEmpty(requestId, String.valueOf(System.currentTimeMillis()));
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple);
+
+        String[] mimeTypes = parseMimeTypes(acceptTypes);
+        intent.setType(mimeTypes.length == 1 ? mimeTypes[0] : "*/*");
+        if (mimeTypes.length > 1) {
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        }
+
+        try {
+            startActivityForResult(Intent.createChooser(intent, "选择文件"), REQUEST_BRIDGE_FILE_CHOOSER);
+            dispatchNativeActionResult("chooseFile", true, "");
+        } catch (Exception error) {
+            pendingBridgeFileRequestId = null;
+            Log.e(TAG, "Unable to open bridge file chooser.", error);
+            dispatchNativeActionResult("chooseFile", false, error.getMessage());
+        }
+    }
+
+    private String[] parseMimeTypes(String acceptTypes) {
+        String[] tokens = valueOrEmpty(acceptTypes).split(",");
+        List<String> mimeTypes = new ArrayList<>();
+
+        for (String token : tokens) {
+            String value = token.trim();
+            if (value.isEmpty() || value.startsWith(".")) {
+                continue;
+            }
+            if (value.contains("/")) {
+                mimeTypes.add(value);
+            }
+        }
+
+        if (mimeTypes.isEmpty()) {
+            mimeTypes.add("*/*");
+        }
+        return mimeTypes.toArray(new String[0]);
+    }
+
     private int getCurrentVersionCode() {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
@@ -477,6 +676,45 @@ public abstract class AiEngineWebShellActivity extends Activity {
             }
         }
         return "";
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private Intent buildSystemSettingsIntent(String target) {
+        String normalized = valueOrEmpty(target).toLowerCase(Locale.US);
+        if ("app".equals(normalized) || "application".equals(normalized)) {
+            return new Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName())
+            );
+        }
+
+        if ("wifi".equals(normalized)) {
+            return new Intent(Settings.ACTION_WIFI_SETTINGS);
+        }
+
+        if ("bluetooth".equals(normalized)) {
+            return new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+        }
+
+        if ("accessibility".equals(normalized)) {
+            return new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        }
+
+        if ("notification".equals(normalized)) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                return new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            }
+            return new Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName())
+            );
+        }
+
+        return new Intent(Settings.ACTION_SETTINGS);
     }
 
     private static final class UpdateInfo {
@@ -518,11 +756,89 @@ public abstract class AiEngineWebShellActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Intent intent = new Intent(
-                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                            Uri.parse("package:" + getPackageName())
-                    );
-                    startActivity(intent);
+                    startNativeActivity("openAppSettings", buildSystemSettingsIntent("app"));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openSystemSettings(final String target) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    startNativeActivity("openSystemSettings", buildSystemSettingsIntent(target));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openUrl(final String url) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String normalizedUrl = valueOrEmpty(url);
+                    if (normalizedUrl.isEmpty()) {
+                        dispatchNativeActionResult("openUrl", false, "URL 不能为空。");
+                        return;
+                    }
+                    startNativeActivity("openUrl", new Intent(Intent.ACTION_VIEW, Uri.parse(normalizedUrl)));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openIntent(final String action, final String dataUri, final String mimeType) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(firstNonEmpty(action, Intent.ACTION_VIEW));
+                    String normalizedDataUri = valueOrEmpty(dataUri);
+                    String normalizedMimeType = valueOrEmpty(mimeType);
+
+                    if (!normalizedDataUri.isEmpty() && !normalizedMimeType.isEmpty()) {
+                        intent.setDataAndType(Uri.parse(normalizedDataUri), normalizedMimeType);
+                    } else if (!normalizedDataUri.isEmpty()) {
+                        intent.setData(Uri.parse(normalizedDataUri));
+                    } else if (!normalizedMimeType.isEmpty()) {
+                        intent.setType(normalizedMimeType);
+                    }
+
+                    startNativeActivity("openIntent", intent);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void shareText(final String title, final String text, final String url) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String shareText = firstNonEmpty(text, "");
+                    String shareUrl = valueOrEmpty(url);
+                    if (!shareUrl.isEmpty()) {
+                        shareText = shareText.isEmpty() ? shareUrl : shareText + "\n" + shareUrl;
+                    }
+
+                    if (shareText.isEmpty()) {
+                        dispatchNativeActionResult("shareText", false, "分享内容不能为空。");
+                        return;
+                    }
+
+                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                    sendIntent.setType("text/plain");
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                    String shareTitle = firstNonEmpty(title, "分享");
+                    startNativeActivity("shareText", Intent.createChooser(sendIntent, shareTitle));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void chooseFile(final String requestId, final String acceptTypes, final boolean allowMultiple) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    openBridgeFileChooser(requestId, acceptTypes, allowMultiple);
                 }
             });
         }

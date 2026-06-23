@@ -6,7 +6,7 @@
 
 - 保留共享 Web H5、Python 服务、Android 壳的原始协作关系
 - 不回写源 `ai-engine` 仓库
-- 已经完成 `apps/android/:sdk + :app` 拆分，Android SDK 可独立构建为 AAR
+- 已经完成 `apps/android/:sdk + :app` 拆分，Android SDK 可独立构建 release AAR 并发布到本地 Maven 仓库
 
 ## 当前结构
 
@@ -14,7 +14,7 @@
 | --- | --- |
 | `apps/web/` | 共享 Web H5，继续承载浏览器和 Android WebView 共用界面。 |
 | `apps/api/` | Python/FastAPI 服务，继续提供实时语音网关、运行时接口和 `/runtime/intent` 意图识别。 |
-| `apps/android/` | Android SDK 与 demo 工作区，包含 `:sdk` Android library module 和 `:app` demo module。 |
+| `apps/android/` | Android SDK 与 demo 工作区，包含 `:sdk` Android library module、`:app` demo module 和 `:samples:host-app` 最小宿主示例。 |
 | `config/` | 环境变量和 TypeScript 配置模板。 |
 | `docs/` | 从源仓库复制的产品、架构、ADR 与参考资料。 |
 | `projects/` | 源仓库里的附属项目，暂时原样保留。 |
@@ -28,6 +28,7 @@
 2. 保持 Web H5 和 Python API 与源项目一致。
 3. 把 Android 壳抽成独立 `:sdk` module，demo `:app` 只保留最小启动配置。
 4. 保留服务端意图识别链路，SDK 通过同一套 H5 + Python 服务复用它。
+5. 增加 release AAR、本地 Maven 发布、最小宿主示例和 Native Bridge 扩展能力。
 
 这一次不做：
 
@@ -41,7 +42,9 @@ Android 目录说明：
 
 - `apps/android/sdk/`：可复用 SDK，封装 WebView、麦克风权限桥接、更新检查和宿主配置。
 - `apps/android/app/`：demo 壳，继承 SDK Activity 并配置当前线上 H5 URL。
+- `apps/android/samples/host-app/`：最小宿主接入示例。
 - `apps/android/SDK_INTEGRATION.md`：其他 Android 应用的接入说明。
+- `apps/android/NATIVE_BRIDGE.md`：H5 调用 Native Bridge 的协议说明。
 
 构建 SDK 和 demo：
 
@@ -57,6 +60,12 @@ ANDROID_SDK_ROOT="$HOME/Library/Android/sdk" \
 ```text
 apps/android/sdk/build/outputs/aar/sdk-debug.aar
 apps/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+构建 release SDK、本地 Maven 产物和最小宿主示例：
+
+```bash
+scripts/build-android-sdk-release.sh
 ```
 
 ## 验证命令

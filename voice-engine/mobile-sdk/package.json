@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "./scripts/dev.sh",
     "build": "./scripts/build.sh",
+    "build:android-sdk": "./scripts/build-android-sdk-release.sh",
     "dev:web": "npm --prefix apps/web run dev:web",
     "dev:api": "npm --prefix apps/web run dev:api",
     "preview": "npm --prefix apps/web run preview"
